@@ -33,10 +33,10 @@ test.describe('Pruebas de Accesibilidad Sensorial e Inclusiva (WCAG 2.2 AA/AAA)'
     const navButtons = page.locator('nav button');
     await expect(navButtons).toHaveCount(4);
 
-    // Verificar texto de las 4 pestañas
+    // Verificar texto de las 4 pestañas según el diseño oficial de Figma
     await expect(navButtons.nth(0)).toContainText('Inicio');
-    await expect(navButtons.nth(1)).toContainText('Categorías');
-    await expect(navButtons.nth(2)).toContainText('Buscar');
-    await expect(navButtons.nth(3)).toContainText('Favoritos');
+    await expect(navButtons.nth(1)).toContainText('Anuncios');
+    await expect(navButtons.nth(2)).toContainText('Favoritos');
+    await expect(navButtons.nth(3)).toContainText('Perfil');
   });
 });

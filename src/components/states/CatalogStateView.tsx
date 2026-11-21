@@ -26,7 +26,7 @@ import {
 export interface CatalogStateViewProps {
   stateCode: OperationalStateCode;
   onExit: () => void;
-  onNavigate?: (tab: 'inicio' | 'categorias' | 'buscar' | 'favoritos') => void;
+  onNavigate?: (tab: 'inicio' | 'anuncios' | 'favoritos' | 'perfil' | 'categorias' | 'buscar') => void;
   onOpenNotice?: (noticeId: string) => void;
   onConfigureAlerts?: () => void;
 }

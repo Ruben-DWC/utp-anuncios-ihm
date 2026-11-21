@@ -1,7 +1,7 @@
 import React from 'react';
-import { House, SquaresFour, MagnifyingGlass, BookmarkSimple } from '@phosphor-icons/react';
+import { House, SquaresFour, BookmarkSimple, UserCircle } from '@phosphor-icons/react';
 
-export type TabId = 'inicio' | 'categorias' | 'buscar' | 'favoritos';
+export type TabId = 'inicio' | 'anuncios' | 'favoritos' | 'perfil';
 
 export interface BottomNavBarProps {
   activeTab: TabId;
@@ -21,9 +21,9 @@ interface NavItemConfig {
 
 const NAV_ITEMS: NavItemConfig[] = [
   { id: 'inicio', label: 'Inicio', icon: House },
-  { id: 'categorias', label: 'Categorías', icon: SquaresFour },
-  { id: 'buscar', label: 'Buscar', icon: MagnifyingGlass },
+  { id: 'anuncios', label: 'Anuncios', icon: SquaresFour },
   { id: 'favoritos', label: 'Favoritos', icon: BookmarkSimple },
+  { id: 'perfil', label: 'Perfil', icon: UserCircle },
 ];
 
 /**
@@ -45,7 +45,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
       {NAV_ITEMS.map((item) => {
         const isActive = activeTab === item.id;
         const IconComponent = item.icon;
-        const weight = isActive ? (item.id === 'buscar' ? 'bold' : 'fill') : 'regular';
+        const weight = isActive ? 'fill' : 'regular';
 
         return (
           <button

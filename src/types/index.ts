@@ -1,5 +1,16 @@
 export type CategoryId = 'todos' | 'academico' | 'matricula' | 'becas' | 'eventos' | 'pagos';
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  code: string;
+  email: string;
+  campus: string;
+  career: string;
+  cycle: string;
+  tag?: string;
+}
+
 export interface Category {
   id: CategoryId;
   nombre: string;

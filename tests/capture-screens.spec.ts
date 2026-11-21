@@ -1,0 +1,21 @@
+import { test } from '@playwright/test';
+
+test('Capturar pantallas oficiales de Login y Perfil', async ({ page }) => {
+  await page.goto('http://localhost:5174/');
+  await page.waitForLoadState('networkidle');
+
+  // Capturar Inicio
+  await page.screenshot({ path: 'screenshot_inicio.png' });
+
+  // Ir a pestaña Perfil (4to botón del nav)
+  const profileTab = page.locator('nav button').nth(3);
+  await profileTab.click();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'screenshot_perfil.png' });
+
+  // Click en Cerrar sesión para ver la pantalla de Login institucional
+  const logoutButton = page.locator('button:has-text("Cerrar sesión")');
+  await logoutButton.click();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'screenshot_login.png' });
+});
