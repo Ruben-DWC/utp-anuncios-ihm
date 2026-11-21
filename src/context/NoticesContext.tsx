@@ -24,7 +24,20 @@ export const NoticesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
-  const [activeEvaluatorState, setActiveEvaluatorState] = useState<OperationalStateCode | null>(null);
+  const [activeEvaluatorState, setActiveEvaluatorState] = useState<OperationalStateCode | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const stateParam = params.get('state') || params.get('estado');
+      if (stateParam && /^E-(0[1-9]|10)$/.test(stateParam)) {
+        return stateParam as OperationalStateCode;
+      }
+      const evalParam = params.get('evaluator');
+      if (evalParam && /^E-(0[1-9]|10)$/.test(evalParam)) {
+        return evalParam as OperationalStateCode;
+      }
+    }
+    return null;
+  });
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {

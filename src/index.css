@@ -17,17 +17,23 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Soporte estricto de accesibilidad: Si el usuario activó reducción de movimiento en el SO */
+/* Indicador de foco visible estricto (WCAG 2.2 Nivel AA/AAA - Criterio 2.4.11 / 2.4.13 Focus Appearance) */
+:focus-visible {
+  outline: 3px solid #B50E30 !important;
+  outline-offset: 2px !important;
+}
+
+/* Soporte estricto de accesibilidad: Si el usuario activó reducción de movimiento en el SO (WCAG 2.3.3) */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
 }
 
-/* Modo Alto Contraste Reforzado (WCAG 2.2 Nivel AAA) */
+/* Modo Alto Contraste Reforzado (WCAG 2.2 Nivel AAA - Ratio > 7:1) */
 .high-contrast-mode {
   --bg-primary: #000000 !important;
   --text-primary: #FFFFFF !important;
@@ -35,14 +41,35 @@ body {
   color: #FFFFFF !important;
 }
 
-.high-contrast-mode .accessible-card {
-  background-color: #121212 !important;
+.high-contrast-mode :focus-visible {
+  outline: 3px solid #FFFF00 !important;
+  outline-offset: 3px !important;
+}
+
+.high-contrast-mode .accessible-card,
+.high-contrast-mode aside,
+.high-contrast-mode main,
+.high-contrast-mode header,
+.high-contrast-mode nav {
+  background-color: #000000 !important;
   border-color: #FFFFFF !important;
   color: #FFFFFF !important;
+}
+
+.high-contrast-mode button {
+  border: 1px solid #FFFFFF !important;
 }
 
 .high-contrast-mode .accessible-badge {
   background-color: #FFFFFF !important;
   color: #000000 !important;
   font-weight: 800 !important;
+}
+
+.high-contrast-mode input,
+.high-contrast-mode select,
+.high-contrast-mode textarea {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
 }
