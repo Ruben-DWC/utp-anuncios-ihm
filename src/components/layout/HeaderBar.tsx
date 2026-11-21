@@ -29,7 +29,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <header
       role="banner"
-      className="sticky top-0 z-20 bg-utp-red text-white px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between shadow-md transition-all select-none"
+      className="sticky top-0 z-20 bg-utp-red text-white px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between shadow-md transition-all select-none shrink-0"
     >
       {/* Identidad Institucional UTP */}
       <div className="flex items-center gap-2.5 sm:gap-3">

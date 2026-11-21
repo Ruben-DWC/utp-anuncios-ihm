@@ -51,7 +51,7 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
     <section
       role="search"
       aria-label="Filtrado y búsqueda de avisos"
-      className="p-3.5 sm:p-4 bg-slate-50/95 border-b border-slate-200"
+      className="p-3.5 sm:p-4 bg-slate-50/95 border-b border-slate-200 shrink-0"
     >
       {/* Campo de búsqueda con icono y botón de limpiar */}
       <div className="relative mb-3">
@@ -84,9 +84,9 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
         )}
       </div>
 
-      {/* Lista deslizable horizontal de categorías */}
+      {/* Lista deslizable horizontal de categorías sin barra gris nativa */}
       <div
-        className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none scroll-smooth select-none"
+        className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar scrollbar-none scroll-smooth select-none"
         role="tablist"
         aria-label="Categorías de anuncios"
       >

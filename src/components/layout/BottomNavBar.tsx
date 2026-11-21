@@ -40,7 +40,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
     <nav
       role="navigation"
       aria-label="Navegación principal"
-      className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 sm:px-6 py-1.5 sm:py-2 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)] select-none"
+      className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 sm:px-6 py-2 pb-2.5 sm:pb-3 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)] select-none shrink-0"
     >
       {NAV_ITEMS.map((item) => {
         const isActive = activeTab === item.id;

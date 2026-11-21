@@ -17,6 +17,39 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Utilidades para ocultar barras de scroll nativas antiestéticas manteniendo deslizamiento táctil/trackpad */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+/* Scrollbar estilizada, delgada y discreta para el scroll de contenidos en navegadores de escritorio */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
 /* Indicador de foco visible estricto (WCAG 2.2 Nivel AA/AAA - Criterio 2.4.11 / 2.4.13 Focus Appearance) */
 :focus-visible {
   outline: 3px solid #B50E30 !important;

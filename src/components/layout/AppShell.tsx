@@ -28,9 +28,9 @@ export const AppShell: React.FC<AppShellProps> = ({
   className = '',
 }) => {
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-start sm:py-6 px-0 sm:px-4">
+    <div className="h-screen sm:min-h-screen bg-slate-100 flex flex-col items-center justify-center sm:py-6 px-0 sm:px-4 overflow-hidden sm:overflow-auto">
       {/* Contenedor adaptativo: móvil centrado en desktop con barra de evaluación lateral */}
-      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6 items-start justify-center">
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center h-full sm:h-auto">
         {/* Panel lateral (Evaluador docente AP3 / PF) */}
         {sidebar && (
           <aside className="w-full lg:w-72 xl:w-80 order-2 lg:order-1 px-4 sm:px-0">
@@ -40,7 +40,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         {/* Marco principal del dispositivo móvil UTP Anuncios (320px a 430px) */}
         <main
-          className={`w-full max-w-md bg-white min-h-[844px] h-[100dvh] sm:h-[844px] sm:max-h-[92vh] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-slate-200 order-1 lg:order-2 ${className}`}
+          className={`w-full max-w-md bg-white h-full sm:h-[844px] sm:max-h-[92vh] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border border-slate-200 order-1 lg:order-2 ${className}`}
         >
           {/* Header institucional sticky */}
           {header}
