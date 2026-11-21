@@ -48,8 +48,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         {/* Cabecera del carné */}
         <div className="flex items-center justify-between border-b border-white/20 pb-3 mb-4">
           <div className="flex items-center gap-2">
-            <span className="font-black text-xs tracking-widest bg-white text-utp-red px-2 py-0.5 rounded-md shadow-sm">
-              UTP
+            <span className="bg-white/95 px-2 py-0.5 rounded-md shadow-sm inline-flex items-center">
+              <img
+                src="/assets/utp-logo-new-BPM18T9V.png"
+                alt="UTP"
+                className="h-4 w-auto object-contain"
+              />
             </span>
             <span className="text-[11px] font-semibold text-red-100 tracking-wider uppercase">
               Carné Universitario Digital

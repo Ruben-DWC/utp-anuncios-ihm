@@ -60,11 +60,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <div className="w-full h-full bg-slate-50 flex flex-col justify-between overflow-y-auto p-6 select-none animate-fade-in">
-      {/* Zona Superior: Identidad Institucional UTP */}
-      <div className="flex flex-col items-center pt-4 sm:pt-6">
-        <div className="w-16 h-16 rounded-2xl bg-utp-red text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-utp-red/20 mb-4 tracking-wider ring-4 ring-red-100">
-          UTP
+    <div className="w-full h-full bg-gradient-to-b from-white via-rose-50/50 to-slate-100 flex flex-col justify-between overflow-y-auto p-5 sm:p-6 select-none animate-fade-in relative">
+      {/* Elementos decorativos de fondo: degradados sutiles institucionales rojo y blanco */}
+      <div className="absolute top-0 -left-12 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -right-12 w-56 h-56 bg-utp-red/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-40 h-40 bg-red-600/5 rounded-full blur-2xl pointer-events-none" />
+
+      {/* Zona Superior: Identidad Institucional Oficial UTP */}
+      <div className="flex flex-col items-center pt-2 sm:pt-4 relative z-10">
+        <div className="p-3 bg-white/90 backdrop-blur-md rounded-2xl shadow-sm border border-red-100/80 mb-3 flex items-center justify-center">
+          <img
+            className="brand-mark h-14 sm:h-16 w-auto object-contain"
+            alt="Universidad Tecnológica del Perú"
+            src="/assets/utp-logo-new-BPM18T9V.png"
+          />
         </div>
 
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight text-center">
@@ -76,7 +85,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       {/* Formulario de Login Fiel al Wireframe 02 y Vercel Previo */}
-      <div className="w-full max-w-sm mx-auto my-6 bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+      <div className="w-full max-w-sm mx-auto my-4 sm:my-6 bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-xl shadow-red-950/5 border border-red-100/80 relative z-10">
         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
           <ShieldCheck size={20} weight="fill" className="text-utp-red" />
           <h2 className="text-sm font-bold text-slate-800">

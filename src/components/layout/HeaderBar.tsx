@@ -34,10 +34,14 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       {/* Identidad Institucional UTP */}
       <div className="flex items-center gap-2.5 sm:gap-3">
         <div
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-sm border border-white/25 flex items-center justify-center font-black text-xs sm:text-sm tracking-wider shadow-inner"
+          className="h-9 sm:h-10 px-2 rounded-xl bg-white/95 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-sm shrink-0"
           aria-hidden="true"
         >
-          UTP
+          <img
+            src="/assets/utp-logo-new-BPM18T9V.png"
+            alt="UTP"
+            className="h-6 sm:h-7 w-auto object-contain"
+          />
         </div>
         <div>
           <h1 className="font-bold text-sm sm:text-base leading-tight tracking-tight text-white">

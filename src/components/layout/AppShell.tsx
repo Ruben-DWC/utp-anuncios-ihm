@@ -28,9 +28,13 @@ export const AppShell: React.FC<AppShellProps> = ({
   className = '',
 }) => {
   return (
-    <div className="h-screen sm:min-h-screen bg-slate-100 flex flex-col items-center justify-center sm:py-6 px-0 sm:px-4 overflow-hidden sm:overflow-auto">
+    <div className="h-screen sm:min-h-screen bg-gradient-to-br from-slate-100 via-rose-50/40 to-slate-200 flex flex-col items-center justify-center sm:py-6 px-0 sm:px-4 overflow-hidden sm:overflow-auto relative">
+      {/* Resplandor sutil universitario institucional rojo y blanco para desktop */}
+      <div className="hidden sm:block absolute -top-40 -left-40 w-96 h-96 bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="hidden sm:block absolute -bottom-40 -right-40 w-96 h-96 bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* Contenedor adaptativo: móvil centrado en desktop con barra de evaluación lateral */}
-      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center h-full sm:h-auto">
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center h-full sm:h-auto relative z-10">
         {/* Panel lateral (Evaluador docente AP3 / PF) */}
         {sidebar && (
           <aside className="w-full lg:w-72 xl:w-80 order-2 lg:order-1 px-4 sm:px-0">
