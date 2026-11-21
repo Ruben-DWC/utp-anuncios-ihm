@@ -1,0 +1,32 @@
+{
+  "name": "utp-anuncios-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "author": "Ruben Walter <u22224908@utp.edu.pe>",
+  "description": "MVP UTP Anuncios - Progressive Web App con Agente IA y Accesibilidad Multimodal (IHM 2026)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.7",
+    "firebase": "^11.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0"
+  }
+}

@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-scale: 1.0;
+  --bg-primary: #F8FAFC;
+  --text-primary: #0F172A;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: calc(1rem * var(--font-scale));
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Soporte estricto de accesibilidad: Si el usuario activó reducción de movimiento en el SO */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Modo Alto Contraste Reforzado (WCAG 2.2 Nivel AAA) */
+.high-contrast-mode {
+  --bg-primary: #000000 !important;
+  --text-primary: #FFFFFF !important;
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+.high-contrast-mode .accessible-card {
+  background-color: #121212 !important;
+  border-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+.high-contrast-mode .accessible-badge {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
