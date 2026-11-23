@@ -50,7 +50,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const handleQuickLeadAccess = () => {
     setCode('u22224908');
-    const result = login('u22224908');
+    const result = login('u22224908', undefined, rememberMe);
     if (result.success && onSuccess) {
       onSuccess();
     }

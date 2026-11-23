@@ -56,11 +56,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'utp_anuncios_auth_user';
+const AUTH_LOGGED_OUT_KEY = 'utp_anuncios_logged_out';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [rememberSession, setRememberSession] = useState<boolean>(true);
+  const [rememberSession, setRememberSession] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem(AUTH_STORAGE_KEY)) return false;
+    }
+    return true;
+  });
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem(AUTH_LOGGED_OUT_KEY) === 'true' || localStorage.getItem(AUTH_LOGGED_OUT_KEY) === 'true') {
+        return null;
+      }
       const stored = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
       if (stored) {
         try {
@@ -70,13 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     }
-    // Por defecto inicia con el perfil de Rubén Walter para experiencia fluida
+    // Por defecto inicia con el perfil de Rubén Walter para experiencia fluida en demo
     return OFFICIAL_PROFILES[0];
   });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (currentUser) {
+        localStorage.removeItem(AUTH_LOGGED_OUT_KEY);
+        sessionStorage.removeItem(AUTH_LOGGED_OUT_KEY);
         if (rememberSession) {
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(currentUser));
           sessionStorage.removeItem(AUTH_STORAGE_KEY);
@@ -87,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         localStorage.removeItem(AUTH_STORAGE_KEY);
         sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        sessionStorage.setItem(AUTH_LOGGED_OUT_KEY, 'true');
       }
     }
   }, [currentUser, rememberSession]);

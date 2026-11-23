@@ -120,6 +120,12 @@ body {
   border: 1px solid #FFFFFF !important;
 }
 
+.high-contrast-mode .bg-yellow-400 {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
 .high-contrast-mode .accessible-badge {
   background-color: #FFFFFF !important;
   color: #000000 !important;

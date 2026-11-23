@@ -73,19 +73,28 @@ export interface AgentAction {
 
 export interface AgentRequest {
   query: string;
+  userName?: string;
+  history?: Array<{ role: 'user' | 'model'; text: string }>;
   active_notices: Array<{
     id: string;
     titulo: string;
     categoria: string;
     urgente: boolean;
     aula?: string;
+    pabellon?: string;
+    lsp_disponible?: boolean;
+    cc_disponible?: boolean;
   }>;
 }
 
 export interface AgentResponse {
   text: string;
   action?: AgentAction;
+  emotion?: 'neutral' | 'feliz' | 'celebrando' | 'disculpa';
+  toolsUsed?: string[];
   fallback?: boolean;
+  fallbackReason?: string;
+  latency_ms?: number;
 }
 
 export interface ChatMessage {

@@ -47,7 +47,12 @@ function isRateLimited(clientIp: string): boolean {
 }
 
 function resolveAllowedOrigin(requestOrigin?: string): string | null {
-  const configured = (process.env.ALLOWED_ORIGIN || process.env.URL || '')
+  const configured = [
+    process.env.ALLOWED_ORIGIN || '',
+    process.env.URL || '',
+    process.env.DEPLOY_PRIME_URL || '',
+  ]
+    .join(',')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
@@ -61,7 +66,7 @@ function resolveAllowedOrigin(requestOrigin?: string): string | null {
 
   const allowList = new Set([...configured, ...localOrigins]);
   if (!requestOrigin) return configured[0] || 'http://localhost:5174';
-  if (allowList.has(requestOrigin) || requestOrigin.endsWith('.netlify.app')) {
+  if (allowList.has(requestOrigin)) {
     return requestOrigin;
   }
   return null;
