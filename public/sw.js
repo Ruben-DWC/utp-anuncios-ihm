@@ -45,7 +45,11 @@ self.addEventListener('fetch', (event) => {
       .catch(() =>
         caches.match(request).then((cached) => {
           if (cached) return cached;
-          if (request.mode === 'navigate') return caches.match('/index.html');
+          if (request.mode === 'navigate') {
+            return caches.match('/index.html').then(
+              (r) => r || new Response('Offline', { status: 503, statusText: 'Offline' })
+            );
+          }
           return new Response('', { status: 504, statusText: 'Offline' });
         })
       )

@@ -68,7 +68,7 @@ export interface AccessibilityPreferences {
 
 export interface AgentAction {
   type: 'filter' | 'highlight' | 'save' | 'info';
-  payload: any;
+  payload: string | null;
 }
 
 export interface AgentRequest {
