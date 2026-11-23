@@ -213,7 +213,7 @@ export const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (onSaveNotice) onSaveNotice(message.action!.payload);
+                    if (onSaveNotice && message.action?.payload) onSaveNotice(message.action.payload);
                   }}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                 >
