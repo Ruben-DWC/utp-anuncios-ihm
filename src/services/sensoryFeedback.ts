@@ -210,17 +210,25 @@ export function triggerMultimodalAlert(type: 'urgent' | 'academic' | 'subtle' = 
   }
 
   // 2. Hardware móvil con soporte nativo de vibración (Web Vibration API)
-  let vibrated = false;
+  // Nota: Chrome en escritorio define navigator.vibrate y retorna true sin motor háptico real,
+  // por lo que detectamos dispositivo táctil móvil antes de omitir el pulso acústico 60 Hz.
+  const isTouchDevice =
+    typeof window !== 'undefined' &&
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
+    window.innerWidth < 1024;
+
+  let vibratedOnMobile = false;
   if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
     try {
-      vibrated = Boolean(navigator.vibrate(pattern));
+      const ok = Boolean(navigator.vibrate(pattern));
+      vibratedOnMobile = ok && isTouchDevice;
     } catch {
-      vibrated = false;
+      vibratedOnMobile = false;
     }
   }
 
-  // 3. Fallback defensivo para laptops de escritorio (Web Audio 60 Hz + armónico 120 Hz)
-  if (!vibrated) {
+  // 3. Fallback acústico (Web Audio 60 Hz + armónico 120 Hz) en escritorio o si no vibró
+  if (!vibratedOnMobile) {
     playHapticAudioPulse(bursts, 60);
   }
 

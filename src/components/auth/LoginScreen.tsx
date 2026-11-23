@@ -22,7 +22,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 }) => {
   const { login, guestAccess } = useAuth();
   const [code, setCode] = useState('u22224908');
-  const [password, setPassword] = useState('••••••••••');
+  const [password, setPassword] = useState('123456');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,7 +135,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               />
             </div>
             <p className="text-[10px] text-slate-400 mt-1 pl-1">
-              Ejemplo: u22224908 (Rubén Walter)
+              Grupo 05: u22224908, u22234050, u22223726, u22216957, u23258409, u23319724 • Clave: <strong className="text-slate-600">123456</strong>
             </p>
           </div>
 

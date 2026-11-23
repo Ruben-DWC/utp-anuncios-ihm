@@ -44,7 +44,8 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         {/* Marco principal del dispositivo móvil UTP Anuncios (320px a 430px) */}
         <main
-          className={`w-full max-w-md bg-white h-full sm:h-[844px] sm:max-h-[92vh] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border border-slate-200 order-1 lg:order-2 ${className}`}
+          id="app-main-frame"
+          className={`app-shell-container w-full max-w-md bg-white h-full sm:h-[844px] sm:max-h-[92vh] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border border-slate-200 order-1 lg:order-2 ${className}`}
         >
           {/* Header institucional sticky */}
           {header}

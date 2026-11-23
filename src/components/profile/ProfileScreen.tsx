@@ -139,7 +139,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <span>Perfiles de Evaluación (Fichas AP2/AP3)</span>
           </div>
           <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
-            4 Personas
+            {OFFICIAL_PROFILES.length} Perfiles
           </span>
         </div>
 

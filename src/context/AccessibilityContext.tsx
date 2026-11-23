@@ -47,6 +47,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const [isStrobeActive, setIsStrobeActive] = useState(false);
+  const [sensoryAlertBanner, setSensoryAlertBanner] = useState<string | null>(null);
   const [isReducedMotion, setIsReducedMotion] = useState<boolean>(() => isReducedMotionPreferred());
   const strobeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -161,8 +162,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Disparo de destello perimetral seguro acotado estrictamente a <= 2.0 Hz (WCAG 2.3.1)
   const triggerStrobePulse = useCallback((durationMs: number = 3000) => {
-    // Si el usuario desactivó destellos o el SO tiene reducción de movimiento, abortar
-    if (!preferences.strobeAlertEnabled || isReducedMotionPreferred() || isReducedMotion) {
+    if (!preferences.strobeAlertEnabled) {
       return;
     }
 
@@ -170,9 +170,16 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       clearTimeout(strobeTimerRef.current);
     }
 
+    const reduced = isReducedMotionPreferred() || isReducedMotion;
     setIsStrobeActive(true);
+    setSensoryAlertBanner(
+      reduced
+        ? 'Alerta Visual Segura Activa (borde estático por reducción de movimiento)'
+        : 'Alerta Multimodal Activa: Destello ≤ 2.0 Hz + Pulso 60 Hz / Háptica'
+    );
     strobeTimerRef.current = setTimeout(() => {
       setIsStrobeActive(false);
+      setSensoryAlertBanner(null);
       strobeTimerRef.current = null;
     }, durationMs);
   }, [preferences.strobeAlertEnabled, isReducedMotion]);
@@ -182,10 +189,13 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     if (preferences.hapticFeedbackEnabled) {
       triggerMultimodalAlert(type);
     }
-    if (preferences.strobeAlertEnabled && !isReducedMotion && type === 'urgent') {
+    if (preferences.strobeAlertEnabled && type === 'urgent') {
       triggerStrobePulse(3000);
+    } else if (!preferences.strobeAlertEnabled && preferences.hapticFeedbackEnabled) {
+      setSensoryAlertBanner('Alerta Háptica / Acústica (60 Hz) activada');
+      setTimeout(() => setSensoryAlertBanner(null), 2500);
     }
-  }, [preferences.hapticFeedbackEnabled, preferences.strobeAlertEnabled, isReducedMotion, triggerStrobePulse]);
+  }, [preferences.hapticFeedbackEnabled, preferences.strobeAlertEnabled, triggerStrobePulse]);
 
   return (
     <AccessibilityContext.Provider
@@ -203,18 +213,6 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         isReducedMotion,
       }}
     >
-      {/* 
-        Aviso perimetral estroboscópico seguro (<= 2.0 Hz)
-        Se implementa como un anillo perimetral fijo (inset-0) con pointer-events-none 
-        para abarcar toda la vista sin interferir con la navegación ni bloquear clics.
-      */}
-      {isStrobeActive && !isReducedMotion && (
-        <div
-          className="fixed inset-0 pointer-events-none z-50 animate-strobe-safe border-4 border-utp-red/80 rounded-none shadow-[inset_0_0_24px_rgba(181,14,48,0.7)]"
-          aria-hidden="true"
-        />
-      )}
-
       {/* Anuncio audible y textual accesible para lectores de pantalla */}
       <div 
         id="a11y-live-announcer" 
@@ -226,6 +224,31 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       <div className="min-h-screen w-full transition-colors duration-200">
         {children}
       </div>
+
+      {/* 
+        Aviso perimetral estroboscópico seguro (<= 2.0 Hz) en z-[60] después de {children}
+        para que sea visible incluso sobre modales/drawers (z-40 / z-50).
+        Si prefers-reduced-motion está activo, muestra borde estático de alto contraste.
+      */}
+      {isStrobeActive && (
+        <div
+          className={`fixed inset-0 pointer-events-none z-[60] border-[8px] border-utp-red rounded-none shadow-[inset_0_0_32px_rgba(181,14,48,0.85)] ${
+            isReducedMotion ? '' : 'animate-strobe-safe'
+          }`}
+          aria-hidden="true"
+        />
+      )}
+
+      {sensoryAlertBanner && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 bg-utp-red text-white text-xs font-bold rounded-2xl shadow-2xl border-2 border-white flex items-center gap-2 pointer-events-none animate-fade-in whitespace-nowrap"
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-yellow-300 animate-ping" aria-hidden="true" />
+          <span>{sensoryAlertBanner}</span>
+        </div>
+      )}
     </AccessibilityContext.Provider>
   );
 };

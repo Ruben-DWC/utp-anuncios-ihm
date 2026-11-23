@@ -10,7 +10,57 @@ export const OFFICIAL_PROFILES: UserProfile[] = [
     campus: 'Campus Central - Lima',
     career: 'Ingeniería de Sistemas e Informática',
     cycle: '6to Ciclo - 2026-I',
-    tag: 'Estudiante Autor (AP3 & PF)',
+    tag: 'Grupo 05 • Líder / Estados AP3',
+  },
+  {
+    id: 'renzo',
+    name: 'Renzo José Garavito Valdivia',
+    code: 'u22234050',
+    email: 'u22234050@utp.edu.pe',
+    campus: 'Campus Central - Lima',
+    career: 'Ingeniería de Sistemas e Informática',
+    cycle: '6to Ciclo - 2026-I',
+    tag: 'Grupo 05 • Accesibilidad',
+  },
+  {
+    id: 'anais',
+    name: 'Anais Milenka Huillca Rojas',
+    code: 'u22223726',
+    email: 'u22223726@utp.edu.pe',
+    campus: 'Campus Central - Lima',
+    career: 'Ingeniería de Sistemas e Informática',
+    cycle: '6to Ciclo - 2026-I',
+    tag: 'Grupo 05 • Análisis UX',
+  },
+  {
+    id: 'angela',
+    name: 'Angela Torres Francia',
+    code: 'u22216957',
+    email: 'u22216957@utp.edu.pe',
+    campus: 'Campus Central - Lima',
+    career: 'Ingeniería de Sistemas e Informática',
+    cycle: '6to Ciclo - 2026-I',
+    tag: 'Grupo 05 • Prototipado',
+  },
+  {
+    id: 'juancarlos',
+    name: 'Juan Carlos Quirita Llasa',
+    code: 'u23258409',
+    email: 'u23258409@utp.edu.pe',
+    campus: 'Campus Central - Lima',
+    career: 'Ingeniería de Sistemas e Informática',
+    cycle: '6to Ciclo - 2026-I',
+    tag: 'Grupo 05 • Integrante',
+  },
+  {
+    id: 'alisson',
+    name: 'Alisson Kristel Proleon Mondragón',
+    code: 'u23319724',
+    email: 'u23319724@utp.edu.pe',
+    campus: 'Campus Central - Lima',
+    career: 'Ingeniería de Sistemas e Informática',
+    cycle: '6to Ciclo - 2026-I',
+    tag: 'Grupo 05 • Integrante',
   },
   {
     id: 'diego',
@@ -43,6 +93,8 @@ export const OFFICIAL_PROFILES: UserProfile[] = [
     tag: 'Persona: TDAH & Alertas Hápticas',
   },
 ];
+
+export const COMMON_PORTAL_PASSWORD = '123456';
 
 interface AuthContextType {
   currentUser: UserProfile | null;
@@ -117,11 +169,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
 
-    if (password !== undefined && password.trim().length === 0) {
-      return {
-        success: false,
-        error: 'Ingresa tu contraseña del portal UTP.',
-      };
+    if (password !== undefined) {
+      if (password.trim().length === 0) {
+        return {
+          success: false,
+          error: 'Ingresa tu contraseña del portal UTP.',
+        };
+      }
+      if (password.trim() !== COMMON_PORTAL_PASSWORD) {
+        return {
+          success: false,
+          error: `Contraseña incorrecta. Usa la clave común del equipo: ${COMMON_PORTAL_PASSWORD}`,
+        };
+      }
     }
 
     // Buscar si coincide con alguno de los perfiles demo de las fichas de campo AP2/AP3
