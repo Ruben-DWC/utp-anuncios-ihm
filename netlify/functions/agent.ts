@@ -8,6 +8,12 @@ interface CompactNotice {
   aula?: string;
   pabellon?: string;
   lsp_disponible?: boolean;
+  cc_disponible?: boolean;
+}
+
+interface HistoryTurn {
+  role: 'user' | 'model';
+  text: string;
 }
 
 interface AgentAction {
@@ -15,17 +21,48 @@ interface AgentAction {
   payload: string | null;
 }
 
-interface AgentStructuredResponse {
-  text: string;
-  action: AgentAction;
-  fallback?: boolean;
-  latency_ms?: number;
+const VALID_CATEGORIES = new Set(['todos', 'academico', 'matricula', 'becas', 'eventos', 'pagos']);
+
+// Rate limiter en memoria por IP (máx 15 peticiones por minuto, Sección 8.2 del diseño)
+const RATE_LIMIT_MAX = 15;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const rateLimitStore = new Map<string, number[]>();
+
+function isRateLimited(clientIp: string): boolean {
+  const now = Date.now();
+  const timestamps = (rateLimitStore.get(clientIp) || []).filter(
+    (ts) => now - ts < RATE_LIMIT_WINDOW_MS
+  );
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    rateLimitStore.set(clientIp, timestamps);
+    return true;
+  }
+  timestamps.push(now);
+  rateLimitStore.set(clientIp, timestamps);
+  return false;
+}
+
+function sanitizeAction(action: unknown, notices: CompactNotice[]): AgentAction {
+  if (!action || typeof action !== 'object') {
+    return { type: 'info', payload: null };
+  }
+  const raw = action as { type?: unknown; payload?: unknown };
+  const payload = raw.payload != null ? String(raw.payload).trim() : null;
+
+  if (raw.type === 'filter' && payload && VALID_CATEGORIES.has(payload)) {
+    return { type: 'filter', payload };
+  }
+  if ((raw.type === 'highlight' || raw.type === 'save') && payload) {
+    if (notices.some((n) => n.id === payload || n.aula === payload)) {
+      return { type: raw.type, payload };
+    }
+  }
+  return { type: 'info', payload: null };
 }
 
 export const handler: Handler = async (event) => {
   const startTime = Date.now();
 
-  // Encabezados CORS y respuesta JSON
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -42,15 +79,42 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
+  const clientIp =
+    event.headers['x-nf-client-connection-ip'] ||
+    event.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    'unknown';
+
+  if (isRateLimited(clientIp)) {
+    return {
+      statusCode: 429,
+      headers,
+      body: JSON.stringify({
+        error: 'Límite de consultas alcanzado (15 req/min). Activando contingencia local.',
+        fallback: true,
+      }),
+    };
+  }
+
   let query = '';
   let active_notices: CompactNotice[] = [];
+  let history: HistoryTurn[] = [];
+  let userName = 'Estudiante';
 
   try {
     const parsedBody = JSON.parse(event.body || '{}');
-    query = (parsedBody.query || '').trim();
+    query = String(parsedBody.query || '').trim().slice(0, 300);
+    userName = String(parsedBody.userName || 'Estudiante').trim().slice(0, 60);
     const rawNotices = Array.isArray(parsedBody.active_notices) ? parsedBody.active_notices : [];
+    const rawHistory = Array.isArray(parsedBody.history) ? parsedBody.history : [];
 
-    // RESTRICCIÓN DE CARGA ÚTIL: Acotado a máx 15 avisos e índice compacto < 5 KB
+    history = rawHistory
+      .slice(-6)
+      .filter((h: any) => h && (h.role === 'user' || h.role === 'model') && typeof h.text === 'string')
+      .map((h: any) => ({
+        role: h.role,
+        text: h.text.slice(0, 300),
+      }));
+
     active_notices = rawNotices.slice(0, 15).map((n: any) => ({
       id: String(n.id || ''),
       titulo: String(n.titulo || '').substring(0, 80),
@@ -59,9 +123,9 @@ export const handler: Handler = async (event) => {
       aula: n.aula ? String(n.aula).substring(0, 20) : undefined,
       pabellon: n.pabellon ? String(n.pabellon).substring(0, 30) : undefined,
       lsp_disponible: Boolean(n.lsp_disponible),
+      cc_disponible: Boolean(n.cc_disponible),
     }));
 
-    // Asegurar que el string JSON de avisos no supere los 4.5 KB defensivamente
     let serializedNotices = JSON.stringify(active_notices);
     if (serializedNotices.length > 4600) {
       active_notices = active_notices.slice(0, 8);
@@ -69,16 +133,14 @@ export const handler: Handler = async (event) => {
     }
 
     if (!query) {
-      return { 
-        statusCode: 400, 
-        headers, 
-        body: JSON.stringify({ error: 'El parámetro query es requerido.' }) 
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'El parámetro query es requerido.' }),
       };
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-
-    // Si no hay API key en el entorno, activar respuesta inmediata del motor local (<5ms)
     if (!apiKey) {
       const localResponse = generateLocalResponse(query, active_notices);
       return {
@@ -92,47 +154,52 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // System Prompt optimizado para máxima brevedad y directivas estructuradas
-    const systemPrompt = `Eres "Tutor Anuncios IA", asistente académico de la Universidad Tecnológica del Perú (UTP).
-Responde a consultas de estudiantes sobre cambios de aula, horarios, avisos con Lengua de Señas Peruana (LSP), becas y pagos.
-Índice de avisos vigentes:
+    const systemPrompt = `Eres "Tutor Anuncios IA", asistente académico de la Universidad Tecnológica del Perú (UTP) atendiendo a ${userName}.
+Índice de avisos vigentes (solo usa estos datos reales, nunca inventes fechas ni aulas):
 ${serializedNotices}
 
 REGLAS OBLIGATORIAS:
-1. Máximo 2 a 3 frases empáticas y directas en español formal institucional.
-2. Si la consulta involucra un cambio de aula o traslado, especifica aula, pabellón e intérprete LSP.
-3. Responde EXCLUSIVAMENTE con el objeto JSON según el esquema:
-   - "text": Respuesta directa al estudiante.
-   - "action": Objeto con "type" ("filter" | "highlight" | "save" | "info") y "payload" (id de aviso, nombre de categoría "academico"|"becas"|"matricula"|"eventos"|"pagos"|"todos", o null).`;
+1. Responde en español peruano formal e inclusivo, máximo 3 frases breves.
+2. Si involucra traslado/aula, indica aula, pabellón y si tiene intérprete LSP/CC.
+3. Si preguntan algo ajeno a la UTP o avisos, redirige amablemente al portal académico.
+4. Responde EXCLUSIVAMENTE en JSON válido con:
+   - "text": Respuesta al estudiante.
+   - "emotion": "neutral" | "feliz" | "celebrando" | "disculpa".
+   - "toolsUsed": lista corta de herramientas lógicas aplicadas (ej. ["buscar_avisos"]).
+   - "action": { "type": "filter" | "highlight" | "save" | "info", "payload": id de aviso, categoría válida ("todos","academico","matricula","becas","eventos","pagos"), o null }.`;
 
-    // Conexión REST directa a Gemini 2.0 Flash optimizada para latencia < 1.5s
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500); // 3.5s timeout defensivo edge
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    const contents = [
+      ...history.map((turn) => ({
+        role: turn.role,
+        parts: [{ text: turn.text }],
+      })),
+      {
+        role: 'user',
+        parts: [{ text: `Consulta: "${query}"` }],
+      },
+    ];
 
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
       body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `Consulta: "${query.substring(0, 250)}"` }],
-          },
-        ],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents,
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.1,
-          maxOutputTokens: 220,
+          maxOutputTokens: 260,
           responseSchema: {
             type: 'OBJECT',
             properties: {
               text: { type: 'STRING' },
+              emotion: { type: 'STRING', enum: ['neutral', 'feliz', 'celebrando', 'disculpa'] },
+              toolsUsed: { type: 'ARRAY', items: { type: 'STRING' } },
               action: {
                 type: 'OBJECT',
                 properties: {
@@ -151,7 +218,6 @@ REGLAS OBLIGATORIAS:
     clearTimeout(timeoutId);
 
     if (!geminiRes.ok) {
-      // Fallback local ante degradación del proveedor externo
       const fallbackData = generateLocalResponse(query, active_notices);
       return {
         statusCode: 200,
@@ -166,7 +232,6 @@ REGLAS OBLIGATORIAS:
 
     const geminiData = await geminiRes.json();
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!rawText) {
       const fallbackData = generateLocalResponse(query, active_notices);
       return {
@@ -180,22 +245,22 @@ REGLAS OBLIGATORIAS:
       };
     }
 
-    // Sanitizar y verificar JSON
     const sanitized = rawText.replace(/^```json\s*|\s*```$/gi, '').trim();
-    const parsed: AgentStructuredResponse = JSON.parse(sanitized);
+    const parsed = JSON.parse(sanitized);
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        text: parsed.text || 'Consulta procesada.',
-        action: parsed.action || { type: 'info', payload: null },
+        text: String(parsed.text || 'Consulta procesada.'),
+        emotion: parsed.emotion || 'feliz',
+        toolsUsed: Array.isArray(parsed.toolsUsed) ? parsed.toolsUsed : ['gemini_rag'],
+        action: sanitizeAction(parsed.action, active_notices),
         fallback: false,
         latency_ms: Date.now() - startTime,
       }),
     };
-  } catch (_err) {
-    // Resiliencia local ante cualquier excepción de red o parsing
+  } catch {
     const fallbackData = generateLocalResponse(query, active_notices);
     return {
       statusCode: 200,
@@ -209,88 +274,73 @@ REGLAS OBLIGATORIAS:
   }
 };
 
-/**
- * Motor semántico de contingencia local de alta velocidad (<1ms)
- * Garantiza respuestas estructuradas con directivas de UI incluso sin conexión
- */
-function generateLocalResponse(query: string, notices: CompactNotice[]): { text: string; action: AgentAction } {
+function generateLocalResponse(
+  query: string,
+  notices: CompactNotice[]
+): { text: string; action: AgentAction; toolsUsed: string[]; emotion: string } {
   const q = query.toLowerCase().trim();
 
-  // Caso 1: Consulta de cambio de aula / curso IHM
+  if (q.includes('guardar') || q.includes('favorito')) {
+    const target = notices.find((n) => n.urgente) || notices[0];
+    if (target) {
+      return {
+        text: `He guardado "${target.titulo}" en tus Favoritos para acceso rápido sin conexión.`,
+        action: { type: 'save', payload: target.id },
+        toolsUsed: ['guardar_favorito'],
+        emotion: 'celebrando',
+      };
+    }
+  }
+
+  if (q.includes('seña') || q.includes('lsp') || q.includes('subt') || q.includes('accesib')) {
+    const lsp = notices.filter((n) => n.lsp_disponible || n.cc_disponible);
+    if (lsp.length > 0) {
+      return {
+        text: `Hay ${lsp.length} aviso(s) con intérprete LSP o subtítulos (CC), destacando "${lsp[0]!.titulo}".`,
+        action: { type: 'highlight', payload: lsp[0]!.id },
+        toolsUsed: ['filtrar_accesibles'],
+        emotion: 'feliz',
+      };
+    }
+  }
+
   if (q.includes('aula') || q.includes('ihm') || q.includes('cambio') || q.includes('donde') || q.includes('dónde')) {
-    const notice = notices.find((n) => n.aula || n.titulo.toLowerCase().includes('aula') || n.titulo.toLowerCase().includes('ihm'));
-    const aulaStr = notice?.aula || 'A-408';
-    const noticeId = notice?.id || 'A-408';
-    return {
-      text: `Tu clase de Interacción Hombre-Máquina de hoy fue trasladada al Aula ${aulaStr} (Pabellón A, 4to piso) con soporte de intérprete de señas LSP.`,
-      action: {
-        type: 'highlight',
-        payload: noticeId,
-      },
-    };
+    const notice = notices.find((n) => n.aula || n.titulo.toLowerCase().includes('ihm')) || notices[0];
+    if (notice) {
+      return {
+        text: `${notice.titulo}${notice.aula ? ` en Aula ${notice.aula}` : ''}${notice.pabellon ? ` (${notice.pabellon})` : ''}.${notice.lsp_disponible ? ' Incluye intérprete LSP.' : ''}`,
+        action: { type: 'highlight', payload: notice.id },
+        toolsUsed: ['buscar_avisos'],
+        emotion: 'feliz',
+      };
+    }
   }
 
-  // Caso 2: Lengua de señas peruana (LSP) / Accesibilidad
-  if (q.includes('seña') || q.includes('lsp') || q.includes('accesib') || q.includes('discapacidad')) {
-    return {
-      text: 'Los comunicados con intérprete de Lengua de Señas Peruana (LSP) activos corresponden al cambio de aula en A-408 y el simulacro adaptado.',
-      action: {
-        type: 'filter',
-        payload: 'todos',
-      },
-    };
+  const catMap: Array<{ id: string; terms: string[] }> = [
+    { id: 'becas', terms: ['beca', 'convocatoria', 'excelencia'] },
+    { id: 'matricula', terms: ['matricula', 'matrícula', 'turno'] },
+    { id: 'pagos', terms: ['pago', 'cuota', 'pension', 'pensión'] },
+    { id: 'eventos', terms: ['evento', 'simulacro', 'taller'] },
+  ];
+
+  for (const c of catMap) {
+    if (c.terms.some((t) => q.includes(t))) {
+      const match = notices.find((n) => n.categoria === c.id);
+      if (match) {
+        return {
+          text: `En ${c.id} destaca: "${match.titulo}". Aplico el filtro correspondiente en tu pantalla.`,
+          action: { type: 'filter', payload: c.id },
+          toolsUsed: ['filtrar_por_categoria'],
+          emotion: 'feliz',
+        };
+      }
+    }
   }
 
-  // Caso 3: Becas y convocatorias
-  if (q.includes('beca') || q.includes('convocatoria') || q.includes('excelencia') || q.includes('credito')) {
-    return {
-      text: 'La Convocatoria Beca Excelencia Académica 2026-1 está abierta para alumnos de tercio superior hasta el 30 de noviembre.',
-      action: {
-        type: 'filter',
-        payload: 'becas',
-      },
-    };
-  }
-
-  // Caso 4: Matrícula y turnos
-  if (q.includes('matricula') || q.includes('matrícula') || q.includes('turno') || q.includes('inscrip')) {
-    return {
-      text: 'El cronograma de matrícula 2026-1 por promedio ponderado ha sido publicado. Revisa tu turno asignado en el portal.',
-      action: {
-        type: 'filter',
-        payload: 'matricula',
-      },
-    };
-  }
-
-  // Caso 5: Pagos, cuotas o pensiones
-  if (q.includes('pago') || q.includes('cuota') || q.includes('pension') || q.includes('pensión') || q.includes('banco')) {
-    return {
-      text: 'El vencimiento de la Cuota 4 del ciclo sin recargos es el 25 de noviembre mediante banca por internet o presencial.',
-      action: {
-        type: 'filter',
-        payload: 'pagos',
-      },
-    };
-  }
-
-  // Caso 6: Guardar / Favoritos
-  if (q.includes('guardar') || q.includes('favorito') || q.includes('recordar')) {
-    return {
-      text: 'He registrado la directiva para guardar el aviso prioritario en tu panel de favoritos con constancia oficial.',
-      action: {
-        type: 'save',
-        payload: notices[0]?.id || 'A-408',
-      },
-    };
-  }
-
-  // Caso por defecto
   return {
-    text: `He revisado los avisos vigentes para "${query.substring(0, 40)}". Puedes explorar las categorías en el menú superior o consultar por aulas y becas.`,
-    action: {
-      type: 'info',
-      payload: null,
-    },
+    text: `Revisé ${notices.length} avisos vigentes para "${query.substring(0, 40)}". Puedes consultar por aulas, becas, matrícula, pagos o avisos LSP.`,
+    action: { type: 'info', payload: null },
+    toolsUsed: ['resumen_avisos'],
+    emotion: 'neutral',
   };
 }

@@ -19,22 +19,30 @@ import { AgentChatDrawer } from '@/components/agent/AgentChatDrawer';
 import { AccessibilityPanel } from '@/components/accessibility/AccessibilityPanel';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
-import { Sparkle, BookmarkSimple } from '@phosphor-icons/react';
+import { NotificationsDrawer } from '@/components/notifications/NotificationsDrawer';
+import { Sparkle } from '@phosphor-icons/react';
 
 export const App: React.FC = () => {
   const {
     notices,
     selectedCategory,
     setSelectedCategory,
+    accessibilityFilter,
+    setAccessibilityFilter,
     searchQuery,
     setSearchQuery,
     favorites,
     toggleFavorite,
     isFavorite,
+    readIds,
+    markAsRead,
+    markAllAsRead,
+    unreadCount,
     selectedNotice,
     setSelectedNotice,
     activeEvaluatorState,
     setActiveEvaluatorState,
+    isLoadingNotices,
   } = useNotices();
 
   const { triggerSensoryAlert } = useAccessibility();
@@ -44,6 +52,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('inicio');
   const [isA11yPanelOpen, setIsA11yPanelOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isEvaluatorPanelOpen, setIsEvaluatorPanelOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -52,9 +61,14 @@ export const App: React.FC = () => {
     return false;
   });
 
-  // Filtrado de avisos según categoría, búsqueda de texto y pestaña activa
+  // Filtrado de avisos según categoría, accesibilidad, búsqueda de texto y pestaña activa
   const filteredNotices = notices.filter((n) => {
     const matchesCategory = selectedCategory === 'todos' || n.categoria === selectedCategory;
+    const matchesA11y =
+      accessibilityFilter === 'all' ||
+      (accessibilityFilter === 'lsp' && n.lsp_disponible) ||
+      (accessibilityFilter === 'cc' && n.cc_disponible) ||
+      (accessibilityFilter === 'urgent' && n.urgente);
     const matchesSearch =
       !searchQuery ||
       n.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,7 +76,7 @@ export const App: React.FC = () => {
       (n.aula && n.aula.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (n.pabellon && n.pabellon.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesTab = activeTab !== 'favoritos' || isFavorite(n.id);
-    return matchesCategory && matchesSearch && matchesTab;
+    return matchesCategory && matchesA11y && matchesSearch && matchesTab;
   });
 
   const handleTabChange = (tab: any) => {
@@ -118,11 +132,12 @@ export const App: React.FC = () => {
       header={
         <HeaderBar
           onOpenAccessibility={() => setIsA11yPanelOpen(true)}
-          onTriggerAlert={() => triggerSensoryAlert('urgent')}
+          onTriggerAlert={() => setIsNotificationsOpen(true)}
           onToggleEvaluator={() => setIsEvaluatorPanelOpen(!isEvaluatorPanelOpen)}
           isEvaluatorActive={isEvaluatorPanelOpen || Boolean(activeEvaluatorState)}
           userName={currentUser?.name || 'Ruben Walter'}
           studentCode={currentUser?.code || 'u22224908'}
+          unreadCount={unreadCount}
         />
       }
       filterBar={
@@ -132,6 +147,8 @@ export const App: React.FC = () => {
             onSearchChange={setSearchQuery}
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
+            accessibilityFilter={accessibilityFilter}
+            onSelectAccessibilityFilter={setAccessibilityFilter}
             totalResults={filteredNotices.length}
           />
         ) : undefined
@@ -201,6 +218,20 @@ export const App: React.FC = () => {
             isOpen={isA11yPanelOpen}
             onClose={() => setIsA11yPanelOpen(false)}
           />
+
+          {/* Centro de Notificaciones y Preferencias (Figma Frames 17 y 18) */}
+          <NotificationsDrawer
+            isOpen={isNotificationsOpen}
+            onClose={() => setIsNotificationsOpen(false)}
+            notices={notices}
+            readIds={readIds}
+            onSelectNotice={(notice) => {
+              markAsRead(notice.id);
+              setSelectedNotice(notice);
+            }}
+            onMarkAllAsRead={markAllAsRead}
+            onTriggerSensoryTest={() => triggerSensoryAlert('urgent')}
+          />
         </>
       }
     >
@@ -219,35 +250,27 @@ export const App: React.FC = () => {
           onOpenAccessibility={() => setIsA11yPanelOpen(true)}
           onNavigateToFavorites={() => setActiveTab('favoritos')}
         />
+      ) : isLoadingNotices ? (
+        <div className="p-4 pb-24">
+          <CatalogStateView
+            stateCode="E-04"
+            onExit={() => {}}
+            onNavigate={handleTabChange}
+          />
+        </div>
       ) : (
         <div className="p-4 pb-24">
           {filteredNotices.length === 0 ? (
-            <div className="text-center py-12 px-4 select-none">
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                <BookmarkSimple size={32} className="text-slate-400" weight="duotone" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-sm sm:text-base mb-1">
-                {activeTab === 'favoritos'
-                  ? 'No tienes anuncios favoritos guardados'
-                  : 'No se encontraron comunicados'}
-              </h3>
-              <p className="text-xs text-slate-500 mb-5 max-w-xs mx-auto leading-relaxed">
-                {activeTab === 'favoritos'
-                  ? 'Guarda avisos importantes con el icono de marcador para consultarlos sin conexión.'
-                  : 'Intenta ajustar tus términos de búsqueda o prueba explorando otra categoría.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCategory('todos');
-                  setSearchQuery('');
-                  setActiveTab('inicio');
-                }}
-                className="px-4 py-2.5 bg-utp-red hover:bg-utp-redDark text-white text-xs font-bold rounded-xl shadow transition-all active:scale-95"
-              >
-                Ver todos los anuncios
-              </button>
-            </div>
+            <CatalogStateView
+              stateCode={activeTab === 'favoritos' ? 'E-01' : 'E-02'}
+              onExit={() => {
+                setSelectedCategory('todos');
+                setAccessibilityFilter('all');
+                setSearchQuery('');
+                setActiveTab('inicio');
+              }}
+              onNavigate={handleTabChange}
+            />
           ) : (
             <div className="space-y-3" role="feed" aria-label="Lista de comunicados y avisos institucionales">
               {filteredNotices.map((notice) => (
@@ -255,7 +278,10 @@ export const App: React.FC = () => {
                   key={notice.id}
                   notice={notice}
                   isFavorite={isFavorite(notice.id)}
-                  onSelect={setSelectedNotice}
+                  onSelect={(n) => {
+                    markAsRead(n.id);
+                    setSelectedNotice(n);
+                  }}
                   onToggleFavorite={toggleFavorite}
                 />
               ))}

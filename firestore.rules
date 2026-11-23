@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Reglas de seguridad de Cloud Firestore para UTP Anuncios (MVP PF2026 - Sección 6.2).
+// Acceso de cliente estrictamente de solo lectura sobre colecciones públicas;
+// la administración de contenido se realiza únicamente vía Admin SDK / Consola.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Colección de comunicados académicos universitarios (/anuncios).
+    // Lectura pública habilitada para todos los estudiantes; escritura desde cliente denegada.
+    match /anuncios/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Colección de clasificaciones temáticas (/categorias).
+    // Lectura pública habilitada para filtros de navegación; escritura desde cliente denegada.
+    match /categorias/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Denegación por defecto para cualquier otra colección o subcolección no autorizada.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

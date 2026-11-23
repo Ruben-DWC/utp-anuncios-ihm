@@ -13,6 +13,8 @@ import {
   CheckCircle,
   Copy,
   Users,
+  Database,
+  ArrowsClockwise,
 } from '@phosphor-icons/react';
 
 interface ProfileScreenProps {
@@ -25,7 +27,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onNavigateToFavorites,
 }) => {
   const { currentUser, logout, switchProfile } = useAuth();
-  const { favorites } = useNotices();
+  const {
+    favorites,
+    notices,
+    dataSource,
+    firebaseProjectId,
+    isFirebaseConfigured,
+    lastSyncedAt,
+    isLoadingNotices,
+    refreshNotices,
+  } = useNotices();
   const [copiedCode, setCopiedCode] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
@@ -229,6 +240,54 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <span className="font-bold text-emerald-700">Matriculado 2026-I</span>
           </div>
         </div>
+      </div>
+
+      {/* Estado de Sincronización Firebase / Firestore */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5 text-xs">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+            <Database size={18} weight="fill" className={dataSource === 'firestore' ? 'text-emerald-600' : 'text-amber-500'} />
+            <span>Sincronización Cloud Firestore</span>
+          </h3>
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              dataSource === 'firestore'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-800 border border-amber-200'
+            }`}
+          >
+            {dataSource === 'firestore' ? 'En vivo' : 'Caché Local'}
+          </span>
+        </div>
+
+        <div className="divide-y divide-slate-100 text-[11px]">
+          <div className="py-1.5 flex justify-between">
+            <span className="text-slate-500">Proyecto Firebase:</span>
+            <span className="font-mono font-medium text-slate-800">{firebaseProjectId}</span>
+          </div>
+          <div className="py-1.5 flex justify-between">
+            <span className="text-slate-500">Credenciales `.env`:</span>
+            <span className="font-medium text-slate-800">
+              {isFirebaseConfigured ? 'Configuradas' : 'Modo Demo / Contingencia'}
+            </span>
+          </div>
+          <div className="py-1.5 flex justify-between">
+            <span className="text-slate-500">Avisos indexados:</span>
+            <span className="font-bold text-slate-800">
+              {notices.length} documentos ({lastSyncedAt || '--:--'})
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => refreshNotices()}
+          disabled={isLoadingNotices}
+          className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
+        >
+          <ArrowsClockwise size={14} weight="bold" className={isLoadingNotices ? 'animate-spin' : ''} />
+          <span>{isLoadingNotices ? 'Sincronizando Firestore...' : 'Re-sincronizar comunicados'}</span>
+        </button>
       </div>
 
       {/* Botón de Cerrar Sesión */}

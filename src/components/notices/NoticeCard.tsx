@@ -48,57 +48,52 @@ export const NoticeCard: React.FC<NoticeCardProps> = ({
 }) => {
   const catStyle = CATEGORY_STYLES[notice.categoria] || DEFAULT_CATEGORY_STYLE;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onSelect(notice);
-    }
-  };
-
   return (
     <article
-      tabIndex={0}
-      role="button"
-      aria-label={`Aviso: ${notice.titulo}. Categoría ${notice.categoria}. ${notice.urgente ? 'Urgente.' : ''}`}
-      onClick={() => onSelect(notice)}
-      onKeyDown={handleKeyDown}
-      className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-utp-red/50 transition-all cursor-pointer relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red text-left select-none"
+      className="accessible-card p-4 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-utp-red/50 transition-all relative group text-left select-none"
     >
-      {/* Barra superior de la tarjeta: Categoría y Hora */}
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${catStyle.badgeClass}`}
-        >
-          {catStyle.label}
-        </span>
-
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-          <Clock size={14} className="text-slate-400" aria-hidden="true" />
-          <span>{notice.fecha}{notice.hora ? ` • ${notice.hora}` : ''}</span>
-        </div>
-      </div>
-
-      {/* Título del anuncio */}
-      <h2 className="font-bold text-sm sm:text-[15px] text-slate-900 mb-1.5 leading-snug group-hover:text-utp-red transition-colors line-clamp-2">
-        {notice.titulo}
-      </h2>
-
-      {/* Resumen / Descripción truncada */}
-      <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
-        {notice.descripcion}
-      </p>
-
-      {/* Información de ubicación (aula y pabellón si aplica) */}
-      {(notice.aula || notice.pabellon) && (
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mb-3 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-          <MapPin size={14} className="text-utp-red flex-shrink-0" weight="fill" aria-hidden="true" />
-          <span className="truncate">
-            {notice.aula ? `Aula ${notice.aula}` : ''}
-            {notice.aula && notice.pabellon ? ' • ' : ''}
-            {notice.pabellon ? notice.pabellon : ''}
+      {/* Área principal interactiva de apertura de detalle (sin controles anidados - WCAG 4.1.2) */}
+      <button
+        type="button"
+        onClick={() => onSelect(notice)}
+        className="w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red rounded-xl"
+      >
+        {/* Barra superior de la tarjeta: Categoría y Hora */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${catStyle.badgeClass}`}
+          >
+            {catStyle.label}
           </span>
+
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+            <Clock size={14} className="text-slate-400" aria-hidden="true" />
+            <span>{notice.fecha}{notice.hora ? ` • ${notice.hora}` : ''}</span>
+          </div>
         </div>
-      )}
+
+        {/* Título del anuncio */}
+        <h2 className="font-bold text-sm sm:text-[15px] text-slate-900 mb-1.5 leading-snug group-hover:text-utp-red transition-colors line-clamp-2">
+          {notice.titulo}
+        </h2>
+
+        {/* Resumen / Descripción truncada */}
+        <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
+          {notice.descripcion}
+        </p>
+
+        {/* Información de ubicación (aula y pabellón si aplica) */}
+        {(notice.aula || notice.pabellon) && (
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mb-2 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+            <MapPin size={14} className="text-utp-red flex-shrink-0" weight="fill" aria-hidden="true" />
+            <span className="truncate">
+              {notice.aula ? `Aula ${notice.aula}` : ''}
+              {notice.aula && notice.pabellon ? ' • ' : ''}
+              {notice.pabellon ? notice.pabellon : ''}
+            </span>
+          </div>
+        )}
+      </button>
 
       {/* Barra inferior: Badges de accesibilidad y botón de favoritos */}
       <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">

@@ -27,6 +27,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [isRecoveryOpen, setIsRecoveryOpen] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoverySent, setRecoverySent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,11 +186,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </label>
             <button
               type="button"
-              onClick={() =>
-                setErrorMessage(
-                  'Para restablecer tu contraseña institucional, comunícate con la mesa de ayuda SAE UTP (sae@utp.edu.pe).'
-                )
-              }
+              onClick={() => {
+                setRecoveryEmail(code.includes('@') ? code : `${code || 'u22224908'}@utp.edu.pe`);
+                setRecoverySent(false);
+                setIsRecoveryOpen(true);
+              }}
               className="text-utp-red hover:underline font-medium text-[11px]"
             >
               ¿Olvidaste tu clave?
@@ -241,6 +244,68 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           Ruben Walter Vivas Jimenez • u22224908@utp.edu.pe
         </p>
       </footer>
+
+      {/* Modal de Recuperación de Contraseña (Figma Frame 03) */}
+      {isRecoveryOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="recovery-title"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setIsRecoveryOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="recovery-title" className="text-sm font-bold text-slate-900">
+              Recuperación de Contraseña UTP
+            </h3>
+            {recoverySent ? (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 space-y-1">
+                <p className="font-bold">¡Enlace de restablecimiento enviado!</p>
+                <p>
+                  Revisa la bandeja de <strong>{recoveryEmail}</strong> o contacta a SAE UTP (`sae@utp.edu.pe`) si no recibes el correo en 5 minutos.
+                </p>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (recoveryEmail.trim()) setRecoverySent(true);
+                }}
+                className="space-y-3"
+              >
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Ingresa tu correo institucional (`@utp.edu.pe`) para recibir las instrucciones de recuperación de acceso.
+                </p>
+                <input
+                  type="email"
+                  required
+                  value={recoveryEmail}
+                  onChange={(e) => setRecoveryEmail(e.target.value)}
+                  placeholder="u22224908@utp.edu.pe"
+                  aria-label="Correo institucional para recuperación"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-utp-red"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-utp-red hover:bg-utp-redDark text-white font-bold text-xs rounded-xl shadow transition-all"
+                >
+                  Enviar enlace de recuperación
+                </button>
+              </form>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsRecoveryOpen(false)}
+              className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800"
+            >
+              Volver al inicio de sesión
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

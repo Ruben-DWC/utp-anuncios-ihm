@@ -53,7 +53,6 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
             type="button"
             onClick={() => onTabChange(item.id)}
             aria-current={isActive ? 'page' : undefined}
-            aria-label={`${item.label}${item.id === 'favoritos' && favoritesCount > 0 ? `, ${favoritesCount} guardados` : ''}`}
             className={`min-w-[54px] min-h-[48px] px-2 py-1 flex flex-col items-center justify-center gap-1 rounded-xl transition-all relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red ${
               isActive
                 ? 'text-utp-red font-bold'

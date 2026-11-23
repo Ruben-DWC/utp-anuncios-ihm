@@ -1,0 +1,17 @@
+{
+  "name": "UTP Anuncios - Portal Académico Inclusivo",
+  "short_name": "UTP Anuncios",
+  "description": "Portal oficial de comunicados académicos UTP con accesibilidad multimodal WCAG 2.2 y Tutor IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#B50E30",
+  "lang": "es-PE",
+  "icons": [
+    {
+      "src": "/assets/utp-logo-new-BPM18T9V.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

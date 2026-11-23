@@ -9,6 +9,7 @@ export interface HeaderBarProps {
   userName?: string;
   studentCode?: string;
   isStrobeActive?: boolean;
+  unreadCount?: number;
 }
 
 /**
@@ -25,6 +26,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   userName = 'Ruben Walter',
   studentCode = 'u22224908',
   isStrobeActive = false,
+  unreadCount = 0,
 }) => {
   return (
     <header
@@ -87,18 +89,18 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors relative flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
             isStrobeActive ? 'ring-2 ring-yellow-400 bg-white/30' : ''
           }`}
-          title="Probar alerta multimodal sensorial (destello seguro y vibración)"
-          aria-label="Probar alerta multimodal sensorial"
+          title="Abrir bandeja de notificaciones y preferencias"
+          aria-label={`Abrir centro de notificaciones${unreadCount > 0 ? `, ${unreadCount} sin leer` : ''}`}
         >
           <BellRinging size={20} weight="bold" className="text-white" />
-          <span
-            className="absolute top-2 right-2 w-2.5 h-2.5 bg-yellow-300 rounded-full animate-ping pointer-events-none"
-            aria-hidden="true"
-          />
-          <span
-            className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full pointer-events-none"
-            aria-hidden="true"
-          />
+          {unreadCount > 0 && (
+            <span
+              className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-yellow-400 text-slate-900 text-[10px] font-black rounded-full flex items-center justify-center shadow-sm ring-2 ring-utp-red"
+              aria-hidden="true"
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
       </div>
     </header>

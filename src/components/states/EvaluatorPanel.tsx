@@ -141,7 +141,7 @@ export const EvaluatorPanel: React.FC<EvaluatorPanelProps> = ({
                 {isSelected ? (
                   <CheckCircle size={14} weight="bold" />
                 ) : (
-                  <span className="text-[10px] text-slate-400">{item.tipo}</span>
+                  <span className="text-[10px] text-slate-600">{item.tipo}</span>
                 )}
               </div>
               <p
@@ -169,7 +169,7 @@ export const EvaluatorPanel: React.FC<EvaluatorPanelProps> = ({
       )}
 
       {/* Nota técnica de accesibilidad */}
-      <div className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-400 flex items-center gap-1.5">
+      <div className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-600 flex items-center gap-1.5">
         <Info size={14} className="text-utp-red shrink-0" />
         <span>Cumple estándar WCAG 2.2 y los 4 componentes por pantalla.</span>
       </div>

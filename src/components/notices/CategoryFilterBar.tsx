@@ -17,6 +17,8 @@ export interface CategoryFilterBarProps {
   onSearchChange: (query: string) => void;
   selectedCategory: CategoryId;
   onSelectCategory: (category: CategoryId) => void;
+  accessibilityFilter?: 'all' | 'lsp' | 'cc' | 'urgent';
+  onSelectAccessibilityFilter?: (filter: 'all' | 'lsp' | 'cc' | 'urgent') => void;
   totalResults?: number;
 }
 
@@ -45,6 +47,8 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
   onSearchChange,
   selectedCategory,
   onSelectCategory,
+  accessibilityFilter = 'all',
+  onSelectAccessibilityFilter,
   totalResults,
 }) => {
   return (
@@ -119,26 +123,54 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
         })}
       </div>
 
+      {/* Filtros rápidos de accesibilidad y prioridad (Figma Frames 13-14) */}
+      {onSelectAccessibilityFilter && (
+        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'all' as const, label: 'Todos los formatos' },
+            { id: 'lsp' as const, label: 'Con LSP' },
+            { id: 'cc' as const, label: 'Subtítulos CC' },
+            { id: 'urgent' as const, label: 'Solo Urgentes' },
+          ].map((f) => {
+            const active = accessibilityFilter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => onSelectAccessibilityFilter(f.id)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-colors ${
+                  active
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Indicador de resultados cuando hay búsqueda o filtro activo */}
-      {(searchQuery || selectedCategory !== 'todos') && typeof totalResults === 'number' && (
-        <div className="mt-2 text-[11px] text-slate-500 flex items-center justify-between px-1">
-          <span>
-            {totalResults === 1 ? '1 aviso encontrado' : `${totalResults} avisos encontrados`}
-          </span>
-          {(searchQuery || selectedCategory !== 'todos') && (
+      {(searchQuery || selectedCategory !== 'todos' || accessibilityFilter !== 'all') &&
+        typeof totalResults === 'number' && (
+          <div className="mt-2 text-[11px] text-slate-500 flex items-center justify-between px-1">
+            <span>
+              {totalResults === 1 ? '1 aviso encontrado' : `${totalResults} avisos encontrados`}
+            </span>
             <button
               type="button"
               onClick={() => {
                 onSearchChange('');
                 onSelectCategory('todos');
+                if (onSelectAccessibilityFilter) onSelectAccessibilityFilter('all');
               }}
               className="text-utp-red hover:underline font-medium text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-utp-red rounded"
             >
               Restablecer filtros
             </button>
-          )}
-        </div>
-      )}
+          </div>
+        )}
     </section>
   );
 };
