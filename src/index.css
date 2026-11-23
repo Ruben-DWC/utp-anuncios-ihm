@@ -83,13 +83,40 @@ body {
 .high-contrast-mode aside,
 .high-contrast-mode main,
 .high-contrast-mode header,
-.high-contrast-mode nav {
+.high-contrast-mode nav,
+.high-contrast-mode [role="dialog"],
+.high-contrast-mode .bg-white,
+.high-contrast-mode .bg-slate-50,
+.high-contrast-mode .bg-slate-100,
+.high-contrast-mode .bg-slate-200,
+.high-contrast-mode .bg-red-50,
+.high-contrast-mode .bg-red-100,
+.high-contrast-mode .bg-blue-50,
+.high-contrast-mode .bg-blue-100,
+.high-contrast-mode .bg-emerald-50,
+.high-contrast-mode .bg-emerald-100,
+.high-contrast-mode .bg-amber-50,
+.high-contrast-mode .bg-amber-100,
+.high-contrast-mode .bg-purple-50,
+.high-contrast-mode .bg-purple-100 {
   background-color: #000000 !important;
   border-color: #FFFFFF !important;
   color: #FFFFFF !important;
 }
 
+.high-contrast-mode p,
+.high-contrast-mode span,
+.high-contrast-mode h1,
+.high-contrast-mode h2,
+.high-contrast-mode h3,
+.high-contrast-mode label,
+.high-contrast-mode button,
+.high-contrast-mode a {
+  color: #FFFFFF !important;
+}
+
 .high-contrast-mode button {
+  background-color: #000000 !important;
   border: 1px solid #FFFFFF !important;
 }
 

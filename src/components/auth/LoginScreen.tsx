@@ -37,7 +37,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setIsLoading(true);
 
     setTimeout(() => {
-      const result = login(code, password);
+      const result = login(code, password, rememberMe);
       setIsLoading(false);
 
       if (result.success) {

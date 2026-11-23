@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
@@ -14,8 +14,25 @@ export default defineConfig({
   projects: [
     {
       name: 'Desktop Chrome',
-      use: { 
+      use: {
         channel: 'chrome',
+        viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: 'Pixel 7 (Mobile)',
+      use: {
+        channel: 'chrome',
+        viewport: { width: 412, height: 915 },
+        hasTouch: true,
+      },
+    },
+    {
+      name: 'iPhone 14 (Mobile)',
+      use: {
+        channel: 'chrome',
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
       },
     },
   ],

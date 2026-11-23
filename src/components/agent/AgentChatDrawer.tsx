@@ -87,15 +87,22 @@ export const AgentChatDrawer: React.FC<AgentChatDrawerProps> = ({
     scrollToBottom();
   }, [chatMessages, isAgentLoading]);
 
+  const handleClose = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    onClose();
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -231,12 +238,21 @@ export const AgentChatDrawer: React.FC<AgentChatDrawerProps> = ({
       const data = await response.json();
       const latency = Math.round(performance.now() - startTime);
 
+      const fallbackMessages: Record<string, string> = {
+        missing_api_key: 'Modo local activo (sin clave GEMINI_API_KEY en entorno).',
+        rate_limit: 'Límite de 15 req/min alcanzado; usando motor local de herramientas.',
+        timeout: 'Latencia externa superior a 2.8s; contingencia local activada.',
+        upstream_error: 'Servicio externo temporalmente degradado; contingencia local activada.',
+      };
+
       dispatchAgentResponse(
         data.text || 'Consulta procesada.',
         data.action || { type: 'info', payload: null },
         Boolean(data.fallback),
         data.latency_ms || latency,
-        data.fallback ? 'Modo local activo (sin clave GEMINI_API_KEY en entorno).' : undefined,
+        data.fallback
+          ? fallbackMessages[data.fallbackReason] || 'Motor local de contingencia activado.'
+          : undefined,
         Array.isArray(data.toolsUsed) ? data.toolsUsed : ['gemini_2_flash'],
         data.emotion || 'feliz'
       );
@@ -314,7 +330,7 @@ export const AgentChatDrawer: React.FC<AgentChatDrawerProps> = ({
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title="Cerrar Tutor IA (Esc)"
               aria-label="Cerrar Tutor IA"

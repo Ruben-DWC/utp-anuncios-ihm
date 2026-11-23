@@ -18,9 +18,7 @@ import {
   FilePdf,
   X,
   CaretRight,
-  UserCheck,
-  House,
-  SquaresFour
+  UserCheck
 } from '@phosphor-icons/react';
 
 export interface CatalogStateViewProps {
@@ -999,63 +997,20 @@ export const CatalogStateView: React.FC<CatalogStateViewProps> = ({
       </div>
 
       {/* COMPONENTE 4: PERMANENCIA DE NAVEGACIÓN
-          Barra inferior institucional permanente para que el usuario nunca quede atrapado */}
-      <nav className="sticky bottom-0 z-10 bg-white border-t border-slate-200 px-6 py-2.5 flex items-center justify-between shadow-md">
+          Indicador estructural (la barra inferior principal permanece fija en AppShell) */}
+      <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-600 flex items-center justify-between">
+        <span>Navegación permanente activa</span>
         <button
           type="button"
           onClick={() => {
             onExit();
             onNavigate?.('inicio');
           }}
-          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-utp-red transition-colors"
-          title="Volver a Inicio"
+          className="text-utp-red font-bold hover:underline"
         >
-          <House size={20} weight={stateCode === 'E-03' ? 'fill' : 'regular'} />
-          <span>Inicio</span>
+          Volver a Inicio →
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            onExit();
-            onNavigate?.('categorias');
-          }}
-          className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-            stateCode === 'E-04' ? 'text-utp-red' : 'text-slate-500 hover:text-utp-red'
-          }`}
-          title="Ver Categorías"
-        >
-          <SquaresFour size={20} weight={stateCode === 'E-04' ? 'fill' : 'regular'} />
-          <span>Categorías</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            onExit();
-            onNavigate?.('buscar');
-          }}
-          className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-            stateCode === 'E-02' ? 'text-utp-red' : 'text-slate-500 hover:text-utp-red'
-          }`}
-          title="Buscar"
-        >
-          <MagnifyingGlass size={20} weight={stateCode === 'E-02' ? 'bold' : 'regular'} />
-          <span>Buscar</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            onExit();
-            onNavigate?.('favoritos');
-          }}
-          className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-            stateCode === 'E-01' || stateCode === 'E-10' ? 'text-utp-red' : 'text-slate-500 hover:text-utp-red'
-          }`}
-          title="Mis Favoritos"
-        >
-          <BookmarkSimple size={20} weight={stateCode === 'E-01' || stateCode === 'E-10' ? 'fill' : 'regular'} />
-          <span>Favoritos</span>
-        </button>
-      </nav>
+      </div>
 
     </div>
   );

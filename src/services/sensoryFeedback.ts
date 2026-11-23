@@ -210,16 +210,19 @@ export function triggerMultimodalAlert(type: 'urgent' | 'academic' | 'subtle' = 
   }
 
   // 2. Hardware móvil con soporte nativo de vibración (Web Vibration API)
+  let vibrated = false;
   if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
     try {
-      navigator.vibrate(pattern);
+      vibrated = Boolean(navigator.vibrate(pattern));
     } catch {
-      // Fallo silencioso si permisos del navegador restringen vibración
+      vibrated = false;
     }
   }
 
-  // 3. Fallback defensivo para laptops de jurado docente (Web Audio 60 Hz + armónico 120 Hz)
-  playHapticAudioPulse(bursts, 60);
+  // 3. Fallback defensivo para laptops de escritorio (Web Audio 60 Hz + armónico 120 Hz)
+  if (!vibrated) {
+    playHapticAudioPulse(bursts, 60);
+  }
 
   // 4. Fallback visual: Micro-shake perimetral únicamente si NO hay reducción de movimiento (WCAG 2.3.3)
   if (!reducedMotion) {

@@ -173,7 +173,7 @@ export const App: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsChatOpen(true)}
-            className="absolute bottom-20 right-4 z-30 w-14 h-14 bg-utp-red text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center border-2 border-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-utp-red"
+            className="absolute bottom-20 right-4 z-20 w-14 h-14 bg-utp-red text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center border-2 border-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-utp-red"
             title="Abrir Tutor IA de Anuncios UTP"
             aria-label="Abrir asistente Tutor IA de Anuncios"
           >

@@ -209,11 +209,9 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         para abarcar toda la vista sin interferir con la navegación ni bloquear clics.
       */}
       {isStrobeActive && !isReducedMotion && (
-        <div 
-          className="fixed inset-0 pointer-events-none z-50 animate-strobe-safe border-4 border-utp-red/80 rounded-none shadow-[inset_0_0_24px_rgba(181,14,48,0.7)]" 
-          aria-live="assertive"
-          role="status"
-          aria-label="Alerta perimetral de emergencia activa"
+        <div
+          className="fixed inset-0 pointer-events-none z-50 animate-strobe-safe border-4 border-utp-red/80 rounded-none shadow-[inset_0_0_24px_rgba(181,14,48,0.7)]"
+          aria-hidden="true"
         />
       )}
 

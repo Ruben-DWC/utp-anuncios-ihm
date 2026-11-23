@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkle,
   User,
@@ -46,6 +46,14 @@ export const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
 }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const isUser = message.sender === 'user';
+
+  useEffect(() => {
+    return () => {
+      if (isSpeaking && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isSpeaking]);
 
   const handleToggleSpeak = () => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -223,7 +231,7 @@ export const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
             </div>
           )}
 
-          <div className="mt-1.5 flex items-center justify-end text-[10px] text-slate-400">
+          <div className="mt-1.5 flex items-center justify-end text-[10px] text-slate-600">
             <span>{message.timestamp}</span>
           </div>
         </div>

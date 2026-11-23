@@ -47,7 +47,7 @@ export const OFFICIAL_PROFILES: UserProfile[] = [
 interface AuthContextType {
   currentUser: UserProfile | null;
   isAuthenticated: boolean;
-  login: (code: string, password?: string) => { success: boolean; error?: string };
+  login: (code: string, password?: string, remember?: boolean) => { success: boolean; error?: string };
   logout: () => void;
   switchProfile: (profileId: string) => void;
   guestAccess: () => void;
@@ -58,9 +58,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = 'utp_anuncios_auth_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [rememberSession, setRememberSession] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
       if (stored) {
         try {
           return JSON.parse(stored);
@@ -76,14 +77,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (currentUser) {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(currentUser));
+        if (rememberSession) {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(currentUser));
+          sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        } else {
+          sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(currentUser));
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
       } else {
         localStorage.removeItem(AUTH_STORAGE_KEY);
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
       }
     }
-  }, [currentUser]);
+  }, [currentUser, rememberSession]);
 
-  const login = (code: string, password?: string): { success: boolean; error?: string } => {
+  const login = (code: string, password?: string, remember = true): { success: boolean; error?: string } => {
+    setRememberSession(remember);
     const cleanCode = code.trim().toLowerCase();
     
     // Validación de código institucional UTP (prefijo 'u' seguido de 8 dígitos o correo institucional)
