@@ -28,10 +28,47 @@ export const AppShell: React.FC<AppShellProps> = ({
   className = '',
 }) => {
   return (
-    <div className="h-screen sm:min-h-screen bg-gradient-to-br from-slate-100 via-rose-50/40 to-slate-200 flex flex-col items-center justify-center sm:py-6 px-0 sm:px-4 overflow-hidden sm:overflow-auto relative">
-      {/* Resplandor sutil universitario institucional rojo y blanco para desktop */}
-      <div className="hidden sm:block absolute -top-40 -left-40 w-96 h-96 bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="hidden sm:block absolute -bottom-40 -right-40 w-96 h-96 bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="h-screen sm:min-h-screen bg-slate-100 flex flex-col items-center justify-center sm:py-6 px-0 sm:px-4 overflow-hidden sm:overflow-auto relative">
+      {/* Fondo geométrico poligonal SVG institucional UTP (oculto en modo Alto Contraste AAA) */}
+      <svg
+        aria-hidden="true"
+        className="high-contrast-hide pointer-events-none fixed inset-0 w-full h-full object-cover z-0"
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="utp-poly-base" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F8FAFC" />
+            <stop offset="55%" stopColor="#F1F5F9" />
+            <stop offset="100%" stopColor="#E2E8F0" />
+          </linearGradient>
+        </defs>
+        <rect width="1440" height="900" fill="url(#utp-poly-base)" />
+        {/* Facetas poligonales superiores en carmesí UTP y pizarra */}
+        <polygon points="0,0 420,0 240,260 0,180" fill="#B50E30" fillOpacity="0.08" />
+        <polygon points="420,0 780,0 520,210 240,260" fill="#CBD5E1" fillOpacity="0.35" />
+        <polygon points="780,0 1160,0 940,190 520,210" fill="#E2E8F0" fillOpacity="0.5" />
+        <polygon points="1160,0 1440,0 1440,280 940,190" fill="#B50E30" fillOpacity="0.06" />
+        {/* Malla poligonal intermedia */}
+        <polygon points="0,180 240,260 160,540 0,480" fill="#CBD5E1" fillOpacity="0.28" />
+        <polygon points="240,260 520,210 460,520 160,540" fill="#FFFFFF" fillOpacity="0.45" />
+        <polygon points="940,190 1440,280 1220,560 880,460" fill="#CBD5E1" fillOpacity="0.25" />
+        {/* Facetas inferiores */}
+        <polygon points="0,480 160,540 340,900 0,900" fill="#B50E30" fillOpacity="0.05" />
+        <polygon points="160,540 460,520 680,900 340,900" fill="#E2E8F0" fillOpacity="0.4" />
+        <polygon points="880,460 1220,560 1040,900 680,900" fill="#FFFFFF" fillOpacity="0.35" />
+        <polygon points="1220,560 1440,280 1440,900 1040,900" fill="#B50E30" fillOpacity="0.09" />
+        {/* Trazos vectoriales finos */}
+        <g stroke="#94A3B8" strokeOpacity="0.18" strokeWidth="1" fill="none">
+          <polyline points="0,180 240,260 520,210 940,190 1440,280" />
+          <polyline points="240,260 160,540 460,520 880,460 1220,560" />
+          <line x1="420" y1="0" x2="240" y2="260" />
+          <line x1="1160" y1="0" x2="940" y2="190" />
+          <line x1="160" y1="540" x2="340" y2="900" />
+          <line x1="1220" y1="560" x2="1040" y2="900" />
+        </g>
+      </svg>
 
       {/* Contenedor adaptativo: móvil centrado en desktop con barra de evaluación lateral */}
       <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center h-full sm:h-auto relative z-10">

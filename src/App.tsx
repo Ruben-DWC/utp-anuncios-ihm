@@ -20,6 +20,7 @@ import { AccessibilityPanel } from '@/components/accessibility/AccessibilityPane
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
 import { NotificationsDrawer } from '@/components/notifications/NotificationsDrawer';
+import { parseVoiceCommand, speakText, stopSpeaking } from '@/services/voiceCommands';
 import { Sparkle } from '@phosphor-icons/react';
 
 export const App: React.FC = () => {
@@ -45,7 +46,7 @@ export const App: React.FC = () => {
     isLoadingNotices,
   } = useNotices();
 
-  const { triggerSensoryAlert } = useAccessibility();
+  const { triggerSensoryAlert, preferences, toggleHighContrast } = useAccessibility();
   const { currentUser, isAuthenticated } = useAuth();
 
   // Estados de navegación e interfaces secundarias
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
   const [isA11yPanelOpen, setIsA11yPanelOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
   const [isEvaluatorPanelOpen, setIsEvaluatorPanelOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -90,6 +92,55 @@ export const App: React.FC = () => {
     }
     if (targetTab === 'anuncios' && selectedCategory === 'todos') {
       setSelectedCategory('academico');
+    }
+  };
+
+  const handleVoiceCommand = (transcript: string) => {
+    const action = parseVoiceCommand(transcript);
+    setVoiceFeedback(`Voz: ${action.label}`);
+    setTimeout(() => setVoiceFeedback(null), 4000);
+
+    switch (action.type) {
+      case 'navigate':
+        setActiveTab(action.tab);
+        break;
+      case 'open_tutor':
+        setIsChatOpen(true);
+        break;
+      case 'open_a11y':
+        setIsA11yPanelOpen(true);
+        break;
+      case 'open_notifications':
+        setIsNotificationsOpen(true);
+        break;
+      case 'filter_category':
+        setActiveTab('inicio');
+        setSelectedCategory(action.category);
+        break;
+      case 'filter_a11y':
+        setActiveTab('inicio');
+        setAccessibilityFilter(action.filter);
+        break;
+      case 'toggle_contrast':
+        if (preferences.highContrast !== action.enable) {
+          toggleHighContrast();
+        }
+        break;
+      case 'read_aloud': {
+        const top = filteredNotices.slice(0, 2);
+        const speech =
+          top.length > 0
+            ? top.map((n, i) => `Aviso ${i + 1}: ${n.titulo}. ${n.descripcion}`).join(' ')
+            : 'No hay avisos visibles con el filtro actual.';
+        speakText(speech);
+        break;
+      }
+      case 'stop_reading':
+        stopSpeaking();
+        break;
+      case 'search':
+        setSearchQuery(action.query);
+        break;
     }
   };
 
@@ -150,6 +201,8 @@ export const App: React.FC = () => {
             accessibilityFilter={accessibilityFilter}
             onSelectAccessibilityFilter={setAccessibilityFilter}
             totalResults={filteredNotices.length}
+            onVoiceCommand={handleVoiceCommand}
+            voiceFeedback={voiceFeedback}
           />
         ) : undefined
       }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth, OFFICIAL_PROFILES } from '@/context/AuthContext';
 import { useNotices } from '@/context/NoticesContext';
 import {
@@ -320,21 +321,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               Código QR de Acceso Institucional
             </h3>
 
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl inline-block mx-auto">
-              <div className="w-40 h-40 bg-white border-2 border-slate-800 rounded-xl flex items-center justify-center p-2">
-                {/* QR Representativo Accesible */}
-                <div className="grid grid-cols-5 gap-1.5 w-full h-full p-2 bg-slate-900 rounded">
-                  <div className="bg-white rounded-sm col-span-2 row-span-2" />
-                  <div className="bg-slate-900" />
-                  <div className="bg-white rounded-sm col-span-2 row-span-2" />
-                  <div className="bg-white rounded-sm col-span-2" />
-                  <div className="bg-white rounded-sm" />
-                  <div className="bg-white rounded-sm col-span-2" />
-                  <div className="bg-white rounded-sm col-span-2 row-span-2" />
-                  <div className="bg-white rounded-sm" />
-                  <div className="bg-white rounded-sm col-span-2 row-span-2" />
-                </div>
-              </div>
+            <div
+              className="p-3.5 bg-white border-2 border-slate-900 rounded-2xl inline-flex items-center justify-center mx-auto shadow-sm"
+              aria-label={`Código QR institucional verificable para ${user.name} (${user.code.toUpperCase()})`}
+            >
+              <QRCodeSVG
+                value={`UTP-CARNET|${user.code.toUpperCase()}|${user.name}|${user.campus}|${user.career}`}
+                size={168}
+                level="M"
+                bgColor="#FFFFFF"
+                fgColor="#0F172A"
+              />
             </div>
 
             <p className="text-[11px] text-slate-500 font-mono">

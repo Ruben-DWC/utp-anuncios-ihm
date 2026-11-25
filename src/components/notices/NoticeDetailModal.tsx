@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Notice } from '@/types';
 import {
   X,
@@ -10,7 +10,10 @@ import {
   VideoCamera,
   Warning,
   ShieldCheck,
+  SpeakerHigh,
+  StopCircle,
 } from '@phosphor-icons/react';
+import { speakText, stopSpeaking } from '@/services/voiceCommands';
 
 export interface NoticeDetailModalProps {
   notice: Notice | null;
@@ -54,9 +57,13 @@ export const NoticeDetailModal: React.FC<NoticeDetailModalProps> = ({
   onToggleFavorite,
   onConfirmRead,
 }) => {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
+        stopSpeaking();
+        setIsSpeaking(false);
         onClose();
       }
     };
@@ -64,9 +71,31 @@ export const NoticeDetailModal: React.FC<NoticeDetailModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      stopSpeaking();
+      setIsSpeaking(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen || !notice) return null;
 
   const catStyle = CATEGORY_STYLES[notice.categoria] || DEFAULT_CATEGORY_STYLE;
+
+  const handleToggleSpeak = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+      setIsSpeaking(false);
+      return;
+    }
+    const started = speakText(
+      `${notice.urgente ? 'Aviso urgente. ' : ''}${notice.titulo}. ${notice.descripcion}`,
+      () => setIsSpeaking(false)
+    );
+    if (started) {
+      setIsSpeaking(true);
+    }
+  };
 
   const handleConfirm = () => {
     if (onConfirmRead) {
@@ -109,15 +138,31 @@ export const NoticeDetailModal: React.FC<NoticeDetailModalProps> = ({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red"
-            title="Cerrar ventana de detalle"
-            aria-label="Cerrar detalle del aviso"
-          >
-            <X size={20} weight="bold" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleToggleSpeak}
+              className={`h-10 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red ${
+                isSpeaking
+                  ? 'bg-utp-red text-white shadow-sm'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+              aria-label={isSpeaking ? 'Detener lectura en voz alta' : 'Escuchar aviso en voz alta'}
+            >
+              {isSpeaking ? <StopCircle size={18} weight="bold" /> : <SpeakerHigh size={18} weight="bold" />}
+              <span>{isSpeaking ? 'Detener' : 'Escuchar'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red"
+              title="Cerrar ventana de detalle"
+              aria-label="Cerrar detalle del aviso"
+            >
+              <X size={20} weight="bold" />
+            </button>
+          </div>
         </div>
 
         {/* Título del anuncio */}

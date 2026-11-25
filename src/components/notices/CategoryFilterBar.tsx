@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CategoryId } from '@/types';
 import { MOCK_CATEGORIES } from '@/data/mockNotices';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import {
   MagnifyingGlass,
   X,
@@ -10,6 +11,8 @@ import {
   CurrencyCircleDollar,
   Sparkle,
   CreditCard,
+  Microphone,
+  MicrophoneSlash,
 } from '@phosphor-icons/react';
 
 export interface CategoryFilterBarProps {
@@ -20,6 +23,8 @@ export interface CategoryFilterBarProps {
   accessibilityFilter?: 'all' | 'lsp' | 'cc' | 'urgent';
   onSelectAccessibilityFilter?: (filter: 'all' | 'lsp' | 'cc' | 'urgent') => void;
   totalResults?: number;
+  onVoiceCommand?: (transcript: string) => void;
+  voiceFeedback?: string | null;
 }
 
 const CATEGORY_ICONS: Record<CategoryId, React.ComponentType<{
@@ -50,43 +55,130 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
   accessibilityFilter = 'all',
   onSelectAccessibilityFilter,
   totalResults,
+  onVoiceCommand,
+  voiceFeedback,
 }) => {
+  const [showVoiceChips, setShowVoiceChips] = useState(false);
+
+  const {
+    isListening,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+  } = useSpeechRecognition({
+    lang: 'es-PE',
+    onResult: (spokenText) => {
+      if (onVoiceCommand) {
+        onVoiceCommand(spokenText);
+      } else {
+        onSearchChange(spokenText);
+      }
+    },
+  });
+
+  const handleMicToggle = () => {
+    if (!isSpeechSupported) {
+      setShowVoiceChips((prev) => !prev);
+      return;
+    }
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
   return (
     <section
       role="search"
       aria-label="Filtrado y búsqueda de avisos"
       className="p-3.5 sm:p-4 bg-slate-50/95 border-b border-slate-200 shrink-0"
     >
-      {/* Campo de búsqueda con icono y botón de limpiar */}
-      <div className="relative mb-3">
-        <label htmlFor="notice-search-input" className="sr-only">
-          Buscar anuncios institucionales
-        </label>
-        <MagnifyingGlass
-          size={18}
-          className="absolute left-3.5 top-3 text-slate-400 pointer-events-none"
-          aria-hidden="true"
-        />
-        <input
-          id="notice-search-input"
-          type="text"
-          placeholder="Buscar avisos, aulas, becas..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-10 py-2.5 bg-white rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-utp-red focus:border-transparent transition-all shadow-sm"
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => onSearchChange('')}
-            className="w-7 h-7 absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red"
-            title="Borrar búsqueda"
-            aria-label="Borrar texto de búsqueda"
-          >
-            <X size={16} weight="bold" />
-          </button>
-        )}
+      {/* Campo de búsqueda con icono, limpiar y comando por voz (Modalidad 3) */}
+      <div className="relative mb-3 flex items-center gap-2">
+        <div className="relative flex-1">
+          <label htmlFor="notice-search-input" className="sr-only">
+            Buscar anuncios institucionales
+          </label>
+          <MagnifyingGlass
+            size={18}
+            className="absolute left-3.5 top-3 text-slate-400 pointer-events-none"
+            aria-hidden="true"
+          />
+          <input
+            id="notice-search-input"
+            type="text"
+            placeholder={isListening ? 'Escuchando comando de voz...' : 'Buscar avisos, aulas, becas...'}
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-10 pr-10 py-2.5 bg-white rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-utp-red focus:border-transparent transition-all shadow-sm"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => onSearchChange('')}
+              className="w-7 h-7 absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red"
+              title="Borrar búsqueda"
+              aria-label="Borrar texto de búsqueda"
+            >
+              <X size={16} weight="bold" />
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleMicToggle}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setShowVoiceChips((prev) => !prev);
+          }}
+          className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utp-red ${
+            isListening
+              ? 'bg-utp-red text-white border-utp-red animate-pulse shadow-md'
+              : 'bg-white text-slate-700 border-slate-300 hover:bg-red-50 hover:text-utp-red hover:border-red-200 shadow-sm'
+          }`}
+          title={
+            isSpeechSupported
+              ? isListening
+                ? 'Detener comando de voz'
+                : 'Ejecutar comando de voz (ej. "Mostrar becas", "Abrir tutor", "Leer avisos")'
+              : 'Ver comandos de voz rápidos'
+          }
+          aria-label={isListening ? 'Detener reconocimiento de voz' : 'Activar comandos de voz'}
+          aria-pressed={isListening}
+        >
+          {isListening ? <MicrophoneSlash size={18} weight="bold" /> : <Microphone size={18} weight="bold" />}
+        </button>
       </div>
+
+      {(voiceFeedback || showVoiceChips) && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-2.5 px-2.5 py-2 rounded-xl bg-red-50 border border-red-200 text-[11px] text-utp-red flex flex-col gap-1.5"
+        >
+          {voiceFeedback && <span className="font-bold">{voiceFeedback}</span>}
+          {showVoiceChips && onVoiceCommand && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-slate-600 font-semibold">Comandos de voz:</span>
+              {['Mostrar becas', 'Solo urgentes', 'Leer avisos', 'Abrir tutor', 'Ir a perfil'].map((cmd) => (
+                <button
+                  key={cmd}
+                  type="button"
+                  onClick={() => {
+                    onVoiceCommand(cmd);
+                    setShowVoiceChips(false);
+                  }}
+                  className="px-2 py-0.5 rounded-full bg-white border border-red-200 text-utp-red font-semibold hover:bg-utp-red hover:text-white transition-colors"
+                >
+                  “{cmd}”
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Lista deslizable horizontal de categorías sin barra gris nativa */}
       <div

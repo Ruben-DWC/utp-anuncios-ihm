@@ -140,3 +140,7 @@ body {
   color: #FFFFFF !important;
   border-color: #FFFFFF !important;
 }
+
+.high-contrast-mode .high-contrast-hide {
+  display: none !important;
+}
