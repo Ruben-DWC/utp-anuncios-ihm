@@ -273,7 +273,8 @@ REGLAS OBLIGATORIAS:
     for (const modelName of modelsToTry) {
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3200);
+      const timeoutMs = modelName === 'gemini-3.5-flash' ? 6000 : 3000;
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
         const res = await fetch(geminiUrl, {
           method: 'POST',

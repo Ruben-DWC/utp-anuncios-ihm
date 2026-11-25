@@ -391,11 +391,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             >
               <QRCodeSVG
                 value={qrUrl}
-                size={176}
-                level="M"
-                marginSize={4}
+                size={192}
+                level="L"
+                marginSize={2}
                 bgColor="#FFFFFF"
-                fgColor="#0F172A"
+                fgColor="#000000"
               />
             </div>
 

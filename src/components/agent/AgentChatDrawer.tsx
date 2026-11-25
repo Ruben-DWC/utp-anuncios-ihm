@@ -214,7 +214,7 @@ export const AgentChatDrawer: React.FC<AgentChatDrawerProps> = ({
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7500);
+    const timeoutId = setTimeout(() => controller.abort(), 9500);
 
     try {
       const response = await fetch('/.netlify/functions/agent', {

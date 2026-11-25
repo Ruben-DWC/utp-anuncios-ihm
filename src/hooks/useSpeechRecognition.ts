@@ -160,7 +160,7 @@ export const useSpeechRecognition = (
       } else if (event.error === 'audio-capture') {
         errorMsg = 'No se detectó ningún micrófono disponible en el dispositivo.';
       } else if (event.error === 'network') {
-        errorMsg = 'Error de red en el servicio de reconocimiento de voz.';
+        errorMsg = 'El dictado en vivo requiere Google Chrome/Edge; usa los comandos rápidos:';
       }
       setError(errorMsg);
       setIsListening(false);
