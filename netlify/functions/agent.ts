@@ -225,10 +225,10 @@ REGLAS OBLIGATORIAS:
    - "toolsUsed": lista corta de herramientas lógicas aplicadas (ej. ["buscar_avisos"]).
    - "action": { "type": "filter" | "highlight" | "save" | "info", "payload": id de aviso, categoría válida ("todos","academico","matricula","becas","eventos","pagos"), o null }.`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
     const controller = new AbortController();
-    // Timeout de 2800ms en servidor para responder dentro del presupuesto de 4000ms del cliente
-    const timeoutId = setTimeout(() => controller.abort(), 2800);
+    // Timeout de 3500ms en servidor para responder dentro del presupuesto de 4000ms del cliente
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
 
     const contents = [
       ...history.map((turn) => ({
@@ -255,7 +255,7 @@ REGLAS OBLIGATORIAS:
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0.1,
-          maxOutputTokens: 260,
+          maxOutputTokens: 400,
           responseSchema: {
             type: 'OBJECT',
             properties: {
