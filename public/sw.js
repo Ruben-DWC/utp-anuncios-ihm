@@ -1,4 +1,4 @@
-const CACHE_NAME = 'utp-anuncios-v1';
+const CACHE_NAME = 'utp-anuncios-v2';
 const APP_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -15,11 +15,13 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {

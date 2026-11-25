@@ -1,8 +1,14 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test('Capturar pantallas oficiales de Login y Perfil', async ({ page }) => {
-  await page.goto('http://localhost:5174/');
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
+
+  // Iniciar sesión primero (la app abre por defecto en Login)
+  await page.locator('#student-code').fill('u22224908');
+  await page.locator('#student-password').fill('123456');
+  await page.locator('button[type="submit"]:has-text("Iniciar sesión")').click();
+  await expect(page.locator('nav button').first()).toBeVisible({ timeout: 10000 });
 
   // Capturar Inicio
   await page.screenshot({ path: 'screenshot_inicio.png' });

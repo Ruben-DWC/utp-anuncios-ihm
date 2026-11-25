@@ -47,7 +47,7 @@ export interface UseSpeechRecognitionOptions {
   continuous?: boolean;
   interimResults?: boolean;
   onResult?: (transcript: string) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string, code?: string) => void;
 }
 
 export interface UseSpeechRecognitionReturn {
@@ -81,6 +81,19 @@ export const useSpeechRecognition = (
   const [error, setError] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
+  const onResultRef = useRef(onResult);
+  const onErrorRef = useRef(onError);
+  const lastTranscriptRef = useRef<string>('');
+  const hasDeliveredFinalRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
+
   const isSupported = typeof window !== 'undefined' && Boolean(
     (window as IWindowWithSpeech).SpeechRecognition ||
     (window as IWindowWithSpeech).webkitSpeechRecognition
@@ -103,39 +116,64 @@ export const useSpeechRecognition = (
     recognition.onstart = () => {
       setIsListening(true);
       setError(null);
+      setTranscript('');
+      lastTranscriptRef.current = '';
+      hasDeliveredFinalRef.current = false;
     };
 
     recognition.onresult = (event: SpeechRecognitionEventLike) => {
-      let currentTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      let finalTranscript = '';
+      let interimTranscript = '';
+      let hasNewFinal = false;
+
+      for (let i = 0; i < event.results.length; i++) {
         const item = event.results[i];
         if (item && item[0]) {
-          currentTranscript += item[0].transcript;
+          if (item.isFinal) {
+            finalTranscript += item[0].transcript;
+            if (i >= event.resultIndex) {
+              hasNewFinal = true;
+            }
+          } else {
+            interimTranscript += item[0].transcript;
+          }
         }
       }
 
-      setTranscript(currentTranscript);
-      if (onResult && currentTranscript.trim()) {
-        onResult(currentTranscript.trim());
+      const displayTranscript = (finalTranscript + interimTranscript).trim();
+      setTranscript(displayTranscript);
+      lastTranscriptRef.current = displayTranscript;
+
+      const finalTrimmed = finalTranscript.trim();
+      if (hasNewFinal && finalTrimmed) {
+        hasDeliveredFinalRef.current = true;
+        onResultRef.current?.(finalTrimmed);
       }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
-      let errorMsg = 'Error en el reconocimiento de voz';
-      if (event.error === 'not-allowed') {
-        errorMsg = 'Permiso de micrófono denegado.';
+      let errorMsg = 'Error en el reconocimiento de voz. Usa los comandos rápidos.';
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        errorMsg = 'Permiso de micrófono denegado. Actívalo o usa los comandos rápidos.';
       } else if (event.error === 'no-speech') {
-        errorMsg = 'No se detectó audio.';
+        errorMsg = 'No se detectó voz en el micrófono. Intenta de nuevo o usa un comando rápido.';
+      } else if (event.error === 'audio-capture') {
+        errorMsg = 'No se detectó ningún micrófono disponible en el dispositivo.';
       } else if (event.error === 'network') {
-        errorMsg = 'Error de red en el servicio de voz.';
+        errorMsg = 'Error de red en el servicio de reconocimiento de voz.';
       }
       setError(errorMsg);
       setIsListening(false);
-      if (onError) onError(errorMsg);
+      onErrorRef.current?.(errorMsg, event.error);
     };
 
     recognition.onend = () => {
       setIsListening(false);
+      const pending = lastTranscriptRef.current.trim();
+      if (!hasDeliveredFinalRef.current && pending) {
+        hasDeliveredFinalRef.current = true;
+        onResultRef.current?.(pending);
+      }
     };
 
     recognitionRef.current = recognition;
@@ -147,25 +185,32 @@ export const useSpeechRecognition = (
         // Ignorar si ya estaba finalizado
       }
     };
-  }, [isSupported, lang, continuous, interimResults, onResult, onError]);
+  }, [isSupported, lang, continuous, interimResults]);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
-      setError('El reconocimiento de voz no está soportado en este navegador.');
+      const msg = 'El reconocimiento de voz no está soportado en este navegador.';
+      setError(msg);
+      onErrorRef.current?.(msg, 'not-supported');
       return;
     }
 
     if (recognitionRef.current) {
       try {
         setError(null);
+        setTranscript('');
+        lastTranscriptRef.current = '';
+        hasDeliveredFinalRef.current = false;
         recognitionRef.current.start();
-      } catch (err: any) {
+      } catch {
         // Si ya estaba en ejecución, detener y reiniciar
         try {
           recognitionRef.current.stop();
           setTimeout(() => recognitionRef.current?.start(), 150);
         } catch {
-          // Fallo no crítico
+          const msg = 'No se pudo iniciar el micrófono. Usa los comandos rápidos.';
+          setError(msg);
+          onErrorRef.current?.(msg, 'audio-capture');
         }
       }
     }

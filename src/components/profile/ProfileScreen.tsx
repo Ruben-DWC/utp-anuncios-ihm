@@ -16,6 +16,9 @@ import {
   Users,
   Database,
   ArrowsClockwise,
+  PencilSimple,
+  X,
+  ArrowSquareOut,
 } from '@phosphor-icons/react';
 
 interface ProfileScreenProps {
@@ -27,7 +30,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onOpenAccessibility,
   onNavigateToFavorites,
 }) => {
-  const { currentUser, logout, switchProfile } = useAuth();
+  const { currentUser, logout, switchProfile, updateProfile } = useAuth();
   const {
     favorites,
     notices,
@@ -40,8 +43,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   } = useNotices();
   const [copiedCode, setCopiedCode] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editCareer, setEditCareer] = useState('');
+  const [editCampus, setEditCampus] = useState('');
+  const [editCycle, setEditCycle] = useState('');
+  const [editError, setEditError] = useState('');
+  const [profileSavedBanner, setProfileSavedBanner] = useState(false);
 
   const user = currentUser || OFFICIAL_PROFILES[0]!;
+  const qrUrl = `https://utp-anuncios.netlify.app/?carnet=${user.code.toUpperCase()}`;
 
   const handleCopyCode = () => {
     if (navigator.clipboard) {
@@ -49,6 +60,34 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     }
+  };
+
+  const openEditModal = () => {
+    setEditName(user.name);
+    setEditCareer(user.career);
+    setEditCampus(user.campus);
+    setEditCycle(user.cycle);
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = editName.trim();
+    const career = editCareer.trim();
+    const campus = editCampus.trim();
+    const cycle = editCycle.trim();
+
+    if (!name || !career || !campus || !cycle) {
+      setEditError('Todos los campos son obligatorios. Completa nombre, carrera, sede y ciclo.');
+      return;
+    }
+
+    updateProfile({ name, career, campus, cycle });
+    setEditError('');
+    setShowEditModal(false);
+    setProfileSavedBanner(true);
+    setTimeout(() => setProfileSavedBanner(false), 4000);
   };
 
   return (
@@ -113,24 +152,49 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
         </div>
 
-        {/* Pie del carné: Sede y Botón QR */}
-        <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-xs">
+        {/* Pie del carné: Sede, Editar perfil y Botón QR */}
+        <div className="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1 text-red-100 text-[11px]">
             <MapPin size={13} weight="fill" />
             <span>{user.campus}</span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowQrModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-[11px] font-bold rounded-xl transition-all border border-white/30 active:scale-95"
-            title="Mostrar código QR de acceso"
-          >
-            <QrCode size={15} weight="bold" />
-            <span>Ver QR</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openEditModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-[11px] font-bold rounded-xl transition-all border border-white/30 active:scale-95"
+              aria-label="Editar perfil"
+              title="Editar datos del perfil"
+            >
+              <PencilSimple size={14} weight="bold" />
+              <span>Editar perfil</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowQrModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-[11px] font-bold rounded-xl transition-all border border-white/30 active:scale-95"
+              title="Mostrar código QR de acceso"
+            >
+              <QrCode size={15} weight="bold" />
+              <span>Ver QR</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Confirmación de actualización de perfil */}
+      {profileSavedBanner && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-4 py-3 text-xs font-semibold flex items-center gap-2 shadow-sm animate-fade-in"
+        >
+          <CheckCircle size={18} weight="fill" className="text-emerald-600 shrink-0" />
+          <span>Perfil actualizado correctamente. Los cambios ya se reflejan en tu carné digital.</span>
+        </div>
+      )}
 
       {/* Selector de User Personas Evaluadas (AP2 / AP3) */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
@@ -322,13 +386,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </h3>
 
             <div
-              className="p-3.5 bg-white border-2 border-slate-900 rounded-2xl inline-flex items-center justify-center mx-auto shadow-sm"
+              className="p-3 bg-white border-2 border-slate-900 rounded-2xl inline-flex items-center justify-center mx-auto shadow-sm"
               aria-label={`Código QR institucional verificable para ${user.name} (${user.code.toUpperCase()})`}
             >
               <QRCodeSVG
-                value={`https://utp-anuncios.netlify.app/?carnet=${user.code.toUpperCase()}`}
-                size={168}
+                value={qrUrl}
+                size={176}
                 level="M"
+                marginSize={4}
                 bgColor="#FFFFFF"
                 fgColor="#0F172A"
               />
@@ -338,6 +403,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               ID: {user.code.toUpperCase()} • Válido para ingreso a campus
             </p>
 
+            <div>
+              <a
+                href={qrUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-utp-red hover:text-utp-redDark underline underline-offset-2 py-1"
+              >
+                <span>Abrir enlace del carné</span>
+                <ArrowSquareOut size={14} weight="bold" />
+              </a>
+            </div>
+
             <button
               type="button"
               onClick={() => setShowQrModal(false)}
@@ -345,6 +422,136 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             >
               Cerrar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal accesible para Editar Perfil */}
+      {showEditModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-profile-modal-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowEditModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setShowEditModal(false);
+          }}
+        >
+          <div
+            className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl space-y-4 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-red-100 text-utp-red rounded-xl flex items-center justify-center">
+                  <PencilSimple size={18} weight="bold" />
+                </div>
+                <div>
+                  <h3 id="edit-profile-modal-title" className="font-bold text-sm text-slate-900">
+                    Editar perfil académico
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-mono">{user.code}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                aria-label="Cerrar modal de edición"
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                <X size={18} weight="bold" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-3" noValidate>
+              {editError && (
+                <div
+                  role="alert"
+                  className="bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-xl px-3 py-2"
+                >
+                  {editError}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="edit-profile-name" className="block text-xs font-bold text-slate-700 mb-1">
+                  Nombre completo
+                </label>
+                <input
+                  id="edit-profile-name"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-utp-red focus:bg-white"
+                  placeholder="Ej. Rubén Walter Vivas"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-profile-career" className="block text-xs font-bold text-slate-700 mb-1">
+                  Carrera
+                </label>
+                <input
+                  id="edit-profile-career"
+                  type="text"
+                  value={editCareer}
+                  onChange={(e) => setEditCareer(e.target.value)}
+                  className="w-full px-3 py-2 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-utp-red focus:bg-white"
+                  placeholder="Ej. Ingeniería de Sistemas e Informática"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label htmlFor="edit-profile-campus" className="block text-xs font-bold text-slate-700 mb-1">
+                    Sede / Campus
+                  </label>
+                  <input
+                    id="edit-profile-campus"
+                    type="text"
+                    value={editCampus}
+                    onChange={(e) => setEditCampus(e.target.value)}
+                    className="w-full px-3 py-2 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-utp-red focus:bg-white"
+                    placeholder="Ej. Lima Centro"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-profile-cycle" className="block text-xs font-bold text-slate-700 mb-1">
+                    Ciclo
+                  </label>
+                  <input
+                    id="edit-profile-cycle"
+                    type="text"
+                    value={editCycle}
+                    onChange={(e) => setEditCycle(e.target.value)}
+                    className="w-full px-3 py-2 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-utp-red focus:bg-white"
+                    placeholder="Ej. 8° Ciclo"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-utp-red hover:bg-utp-redDark text-white font-bold text-xs rounded-xl shadow transition-all"
+                >
+                  Guardar cambios
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

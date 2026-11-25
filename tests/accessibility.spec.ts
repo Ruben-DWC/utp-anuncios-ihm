@@ -11,9 +11,17 @@ async function expectNoSeriousAxeViolations(page: import('@playwright/test').Pag
   expect(serious).toEqual([]);
 }
 
+async function loginAsStudent(page: import('@playwright/test').Page) {
+  await page.goto('/');
+  await page.locator('#student-code').fill('u22224908');
+  await page.locator('#student-password').fill('123456');
+  await page.locator('button[type="submit"]:has-text("Iniciar sesión")').click();
+  await expect(page.locator('nav button').first()).toBeVisible({ timeout: 10000 });
+}
+
 test.describe('Pruebas de Accesibilidad Sensorial e Inclusiva (WCAG 2.2 AA/AAA)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await loginAsStudent(page);
   });
 
   test('La página principal debe pasar axe-core WCAG 2.2 AA sin violaciones críticas ni serias', async ({ page }) => {

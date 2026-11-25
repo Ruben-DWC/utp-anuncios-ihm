@@ -67,10 +67,10 @@ export function setupSensoryAudioUnlock(): void {
     }
   };
 
-  window.addEventListener('pointerdown', unlock, { once: true, passive: true });
-  window.addEventListener('touchstart', unlock, { once: true, passive: true });
-  window.addEventListener('keydown', unlock, { once: true, passive: true });
-  window.addEventListener('click', unlock, { once: true, passive: true });
+  window.addEventListener('pointerdown', unlock, { passive: true });
+  window.addEventListener('touchstart', unlock, { passive: true });
+  window.addEventListener('keydown', unlock, { passive: true });
+  window.addEventListener('click', unlock, { passive: true });
 }
 
 /**
@@ -192,7 +192,7 @@ export function triggerMultimodalAlert(type: 'urgent' | 'academic' | 'subtle' = 
 
   switch (type) {
     case 'urgent':
-      pattern = [280, 90, 280, 90, 280]; // 3 pulsos potentes
+      pattern = [220, 90, 220, 90, 320]; // 3 pulsos potentes (síncrono en gesto de clic)
       bursts = 3;
       screenReaderText = 'Alerta de emergencia prioritaria recibida con señal multimodal sensorial.';
       break;
@@ -210,12 +210,13 @@ export function triggerMultimodalAlert(type: 'urgent' | 'academic' | 'subtle' = 
   }
 
   // 2. Hardware móvil con soporte nativo de vibración (Web Vibration API)
+  // Debe invocarse síncronamente dentro del gesto de clic del usuario en Android/Chrome.
   // Nota: Chrome en escritorio define navigator.vibrate y retorna true sin motor háptico real,
   // por lo que detectamos dispositivo táctil móvil antes de omitir el pulso acústico 60 Hz.
   const isTouchDevice =
     typeof window !== 'undefined' &&
-    ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
-    window.innerWidth < 1024;
+    (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+      (('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth < 1024));
 
   let vibratedOnMobile = false;
   if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
@@ -228,6 +229,7 @@ export function triggerMultimodalAlert(type: 'urgent' | 'academic' | 'subtle' = 
   }
 
   // 3. Fallback acústico (Web Audio 60 Hz + armónico 120 Hz) en escritorio o si no vibró
+  // En escritorio desbloquea/resume AudioContext síncronamente dentro del clic.
   if (!vibratedOnMobile) {
     playHapticAudioPulse(bursts, 60);
   }

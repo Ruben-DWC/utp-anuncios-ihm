@@ -61,8 +61,10 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
   const [showVoiceChips, setShowVoiceChips] = useState(false);
 
   const {
+    transcript,
     isListening,
     isSupported: isSpeechSupported,
+    error: speechError,
     startListening,
     stopListening,
   } = useSpeechRecognition({
@@ -74,11 +76,14 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
         onSearchChange(spokenText);
       }
     },
+    onError: () => {
+      setShowVoiceChips(true);
+    },
   });
 
   const handleMicToggle = () => {
     if (!isSpeechSupported) {
-      setShowVoiceChips((prev) => !prev);
+      setShowVoiceChips(true);
       return;
     }
     if (isListening) {
@@ -108,7 +113,13 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
           <input
             id="notice-search-input"
             type="text"
-            placeholder={isListening ? 'Escuchando comando de voz...' : 'Buscar avisos, aulas, becas...'}
+            placeholder={
+              isListening
+                ? transcript
+                  ? `Escuchando: "${transcript}"...`
+                  : 'Escuchando comando de voz...'
+                : 'Buscar avisos, aulas, becas...'
+            }
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-10 pr-10 py-2.5 bg-white rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-utp-red focus:border-transparent transition-all shadow-sm"
@@ -152,12 +163,16 @@ export const CategoryFilterBar: React.FC<CategoryFilterBarProps> = ({
         </button>
       </div>
 
-      {(voiceFeedback || showVoiceChips) && (
+      {(voiceFeedback || speechError || (isListening && transcript) || showVoiceChips) && (
         <div
           role="status"
           aria-live="polite"
           className="mb-2.5 px-2.5 py-2 rounded-xl bg-red-50 border border-red-200 text-[11px] text-utp-red flex flex-col gap-1.5"
         >
+          {isListening && transcript && (
+            <span className="font-semibold text-slate-700">Escuchando: “{transcript}”</span>
+          )}
+          {speechError && <span className="font-bold">{speechError}</span>}
           {voiceFeedback && <span className="font-bold">{voiceFeedback}</span>}
           {showVoiceChips && onVoiceCommand && (
             <div className="flex flex-wrap items-center gap-1.5">

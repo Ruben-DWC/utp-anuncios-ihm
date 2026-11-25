@@ -49,8 +49,14 @@ export const App: React.FC = () => {
   const { triggerSensoryAlert, preferences, toggleHighContrast } = useAccessibility();
   const { currentUser, isAuthenticated } = useAuth();
 
+  const hasCarnetParam =
+    typeof window !== 'undefined' &&
+    Boolean(new URLSearchParams(window.location.search).get('carnet')?.trim());
+
   // Estados de navegación e interfaces secundarias
-  const [activeTab, setActiveTab] = useState<TabId>('inicio');
+  const [activeTab, setActiveTab] = useState<TabId>(() =>
+    hasCarnetParam && isAuthenticated ? 'perfil' : hasCarnetParam ? 'perfil' : 'inicio'
+  );
   const [isA11yPanelOpen, setIsA11yPanelOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -173,7 +179,7 @@ export const App: React.FC = () => {
           />
         }
       >
-        <LoginScreen onSuccess={() => setActiveTab('inicio')} />
+        <LoginScreen onSuccess={() => setActiveTab(hasCarnetParam ? 'perfil' : 'inicio')} />
       </AppShell>
     );
   }

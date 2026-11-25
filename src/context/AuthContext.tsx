@@ -103,6 +103,7 @@ interface AuthContextType {
   logout: () => void;
   switchProfile: (profileId: string) => void;
   guestAccess: () => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -113,7 +114,9 @@ const AUTH_LOGGED_OUT_KEY = 'utp_anuncios_logged_out';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rememberSession, setRememberSession] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      if (sessionStorage.getItem(AUTH_STORAGE_KEY)) return false;
+      if (sessionStorage.getItem(AUTH_STORAGE_KEY) && !localStorage.getItem(AUTH_STORAGE_KEY)) {
+        return false;
+      }
     }
     return true;
   });
@@ -131,8 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     }
-    // Por defecto inicia con el perfil de Rubén Walter para experiencia fluida en demo
-    return OFFICIAL_PROFILES[0];
+    return null;
   });
 
   useEffect(() => {
@@ -156,12 +158,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [currentUser, rememberSession]);
 
   const login = (code: string, password?: string, remember = true): { success: boolean; error?: string } => {
-    setRememberSession(remember);
     const cleanCode = code.trim().toLowerCase();
-    
-    // Validación de código institucional UTP (prefijo 'u' seguido de 8 dígitos o correo institucional)
-    const normalizedCode = cleanCode.replace('@utp.edu.pe', '');
-    
+
+    if (!cleanCode) {
+      return {
+        success: false,
+        error: 'Por favor, ingresa tu código o correo institucional UTP (@utp.edu.pe).',
+      };
+    }
+
+    if (cleanCode.includes('@') && !cleanCode.endsWith('@utp.edu.pe')) {
+      return {
+        success: false,
+        error: 'El correo debe terminar en @utp.edu.pe (Ej: u22224908@utp.edu.pe)',
+      };
+    }
+
+    const normalizedCode = cleanCode.endsWith('@utp.edu.pe')
+      ? cleanCode.slice(0, -'@utp.edu.pe'.length)
+      : cleanCode;
+
     if (!normalizedCode) {
       return {
         success: false,
@@ -170,10 +186,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (password !== undefined) {
-      if (password.trim().length === 0) {
+      if (password.trim().length < 6) {
         return {
           success: false,
-          error: 'Ingresa tu contraseña del portal UTP.',
+          error: 'La contraseña debe tener al menos 6 caracteres.',
         };
       }
       if (password.trim() !== COMMON_PORTAL_PASSWORD) {
@@ -184,36 +200,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Buscar si coincide con alguno de los perfiles demo de las fichas de campo AP2/AP3
+    // Buscar si coincide con alguno de los perfiles oficiales
     const matchedProfile = OFFICIAL_PROFILES.find(
-      (p) => p.code.toLowerCase() === normalizedCode || p.id === normalizedCode
+      (p) =>
+        p.code.toLowerCase() === normalizedCode ||
+        p.email.toLowerCase() === cleanCode ||
+        p.id.toLowerCase() === normalizedCode
     );
 
     if (matchedProfile) {
+      setRememberSession(remember);
       setCurrentUser(matchedProfile);
-      return { success: true };
-    }
-
-    // Permitir cualquier código institucional válido que comience con 'u' y números
-    if (/^u\d{8}$/i.test(normalizedCode)) {
-      const newCustomUser: UserProfile = {
-        id: normalizedCode,
-        name: `Estudiante ${normalizedCode.toUpperCase()}`,
-        code: normalizedCode,
-        email: `${normalizedCode}@utp.edu.pe`,
-        campus: 'Campus Central - Lima',
-        career: 'Ingeniería de Sistemas e Informática',
-        cycle: '6to Ciclo - 2026-I',
-        tag: 'Estudiante UTP Registrado',
-      };
-      setCurrentUser(newCustomUser);
       return { success: true };
     }
 
     // Error de validación según Estado E-07 de AP3
     return {
       success: false,
-      error: 'Formato inválido. El código debe tener el formato u22224908 o correo @utp.edu.pe.',
+      error: 'Código o usuario no encontrado en los perfiles oficiales UTP.',
     };
   };
 
@@ -229,7 +233,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const guestAccess = () => {
-    // Permite navegar sin sesión activa en modo invitado
+    // Permite navegar sin sesión activa en modo invitado (solo sesión actual)
+    setRememberSession(false);
     setCurrentUser({
       id: 'invitado',
       name: 'Estudiante Invitado',
@@ -242,6 +247,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const updateProfile = (updates: Partial<UserProfile>) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      if (typeof window !== 'undefined') {
+        if (rememberSession) {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+        } else {
+          sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+        }
+      }
+      return updated;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -251,6 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         switchProfile,
         guestAccess,
+        updateProfile,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState, useMemo } from 'react';
+import { useAuth, OFFICIAL_PROFILES, COMMON_PORTAL_PASSWORD } from '@/context/AuthContext';
 import {
   User,
   Lock,
@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkle,
+  QrCode,
 } from '@phosphor-icons/react';
 
 interface LoginScreenProps {
@@ -21,19 +22,81 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onContinueAsGuest,
 }) => {
   const { login, guestAccess } = useAuth();
-  const [code, setCode] = useState('u22224908');
+
+  const carnetParam = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const raw = new URLSearchParams(window.location.search).get('carnet');
+    const trimmed = raw?.trim();
+    return trimmed && /^u/i.test(trimmed) ? trimmed.toUpperCase() : null;
+  }, []);
+
+  const [code, setCode] = useState(() => (carnetParam ? carnetParam.toLowerCase() : 'u22224908'));
   const [password, setPassword] = useState('123456');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isRecoveryOpen, setIsRecoveryOpen] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoverySent, setRecoverySent] = useState(false);
 
+  const hasInvalidDomain = useMemo(() => {
+    const trimmed = code.trim().toLowerCase();
+    return trimmed.includes('@') && !trimmed.endsWith('@utp.edu.pe');
+  }, [code]);
+
+  const handleAutocompleteDomain = () => {
+    const localPart = code.trim().split('@')[0];
+    setCode(`${localPart}@utp.edu.pe`);
+    setCodeError(null);
+    setErrorMessage(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setCodeError(null);
+    setPasswordError(null);
+
+    const cleanCode = code.trim().toLowerCase();
+    const cleanPassword = password.trim();
+    let nextCodeError: string | null = null;
+    let nextPasswordError: string | null = null;
+
+    if (!cleanCode) {
+      nextCodeError = 'Por favor, ingresa tu código o correo institucional UTP.';
+    } else if (cleanCode.includes('@') && !cleanCode.endsWith('@utp.edu.pe')) {
+      nextCodeError = 'El correo debe terminar en @utp.edu.pe (Ej: u22224908@utp.edu.pe)';
+    } else {
+      const normalized = cleanCode.endsWith('@utp.edu.pe')
+        ? cleanCode.slice(0, -'@utp.edu.pe'.length)
+        : cleanCode;
+      const found = OFFICIAL_PROFILES.some(
+        (p) =>
+          p.code.toLowerCase() === normalized ||
+          p.email.toLowerCase() === cleanCode ||
+          p.id.toLowerCase() === normalized
+      );
+      if (!found) {
+        nextCodeError = 'Código o usuario no encontrado en los perfiles oficiales UTP.';
+      }
+    }
+
+    if (cleanPassword.length < 6) {
+      nextPasswordError = 'La contraseña debe tener al menos 6 caracteres.';
+    } else if (cleanPassword !== COMMON_PORTAL_PASSWORD) {
+      nextPasswordError = `Contraseña incorrecta. Debe coincidir con la clave institucional (${COMMON_PORTAL_PASSWORD}).`;
+    }
+
+    if (nextCodeError || nextPasswordError) {
+      setCodeError(nextCodeError);
+      setPasswordError(nextPasswordError);
+      setErrorMessage(nextCodeError || nextPasswordError);
+      return;
+    }
+
     setIsLoading(true);
 
     setTimeout(() => {
@@ -43,7 +106,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       if (result.success) {
         if (onSuccess) onSuccess();
       } else {
-        setErrorMessage(result.error || 'Credenciales institucionales incorrectas.');
+        const msg = result.error || 'Credenciales institucionales incorrectas.';
+        setErrorMessage(msg);
       }
     }, 450);
   };
@@ -96,12 +160,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </h2>
         </div>
 
+        {carnetParam && (
+          <div
+            role="status"
+            className="mb-4 p-3 bg-sky-50 border border-sky-200 rounded-xl flex items-start gap-2 text-xs text-sky-900"
+          >
+            <QrCode size={18} weight="fill" className="text-sky-600 shrink-0 mt-0.5" />
+            <p className="font-medium leading-snug">
+              Carné QR detectado: <strong>{carnetParam}</strong>. Inicia sesión para ver el perfil verificado.
+            </p>
+          </div>
+        )}
+
         {errorMessage && (
           <div
             role="alert"
-            className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-xs text-red-700 animate-shake"
+            className="mb-4 p-3 bg-red-50 border border-[#B50E30] rounded-xl flex items-start gap-2 text-xs text-[#B50E30] animate-shake"
           >
-            <WarningCircle size={18} weight="fill" className="text-utp-red shrink-0 mt-0.5" />
+            <WarningCircle size={18} weight="fill" className="text-[#B50E30] shrink-0 mt-0.5" />
             <div className="flex-1 font-medium leading-snug">
               <strong>Estado E-07: Error de validación</strong>
               <p className="mt-0.5 text-[11px]">{errorMessage}</p>
@@ -109,7 +185,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label
               htmlFor="student-code"
@@ -128,12 +204,51 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 type="text"
                 autoComplete="username"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                aria-invalid={Boolean(codeError)}
+                aria-describedby={codeError ? 'student-code-error' : undefined}
+                onChange={(e) => {
+                  setCode(e.target.value);
+                  if (codeError) setCodeError(null);
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 placeholder="u22224908 o @utp.edu.pe"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-utp-red focus:border-transparent transition-all"
-                required
+                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl border text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                  codeError
+                    ? 'border-[#B50E30] focus:ring-[#B50E30]'
+                    : 'border-slate-300 focus:ring-utp-red focus:border-transparent'
+                }`}
               />
             </div>
+            {codeError && (
+              <div className="mt-1.5 pl-1 space-y-1.5">
+                <p id="student-code-error" className="text-[11px] font-semibold text-[#B50E30]">
+                  {codeError}
+                </p>
+                {hasInvalidDomain && (
+                  <button
+                    type="button"
+                    onClick={handleAutocompleteDomain}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-[#B50E30] border border-[#B50E30]/30 text-[11px] font-bold transition-colors"
+                  >
+                    Completar con @utp.edu.pe
+                  </button>
+                )}
+              </div>
+            )}
+            {!codeError && hasInvalidDomain && (
+              <div className="mt-1.5 pl-1 space-y-1">
+                <p className="text-[11px] font-semibold text-[#B50E30]">
+                  El correo debe terminar en @utp.edu.pe (Ej: u22224908@utp.edu.pe)
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAutocompleteDomain}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-[#B50E30] border border-[#B50E30]/30 text-[11px] font-bold transition-colors"
+                >
+                  Completar con @utp.edu.pe
+                </button>
+              </div>
+            )}
             <p className="text-[10px] text-slate-400 mt-1 pl-1">
               Grupo 05: u22224908, u22234050, u22223726, u22216957, u23258409, u23319724 • Clave: <strong className="text-slate-600">123456</strong>
             </p>
@@ -157,10 +272,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={Boolean(passwordError)}
+                aria-describedby={passwordError ? 'student-password-error' : undefined}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError(null);
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 placeholder="Ingresa tu contraseña"
-                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-utp-red focus:border-transparent transition-all"
-                required
+                className={`w-full pl-10 pr-10 py-2.5 bg-slate-50 rounded-xl border text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                  passwordError
+                    ? 'border-[#B50E30] focus:ring-[#B50E30]'
+                    : 'border-slate-300 focus:ring-utp-red focus:border-transparent'
+                }`}
               />
               <button
                 type="button"
@@ -172,6 +296,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {passwordError && (
+              <p id="student-password-error" className="text-[11px] font-semibold text-[#B50E30] mt-1.5 pl-1">
+                {passwordError}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between text-xs pt-1">
