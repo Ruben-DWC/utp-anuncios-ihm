@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { useAuth, OFFICIAL_PROFILES } from '@/context/AuthContext';
 import { useNotices } from '@/context/NoticesContext';
 import {
@@ -52,7 +52,30 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [profileSavedBanner, setProfileSavedBanner] = useState(false);
 
   const user = currentUser || OFFICIAL_PROFILES[0]!;
-  const qrUrl = `https://utp-anuncios.netlify.app/?carnet=${user.code.toUpperCase()}`;
+  const qrUrl = `https://utp-anuncios.netlify.app/carnet/${user.code.toUpperCase()}`;
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL(qrUrl, {
+      width: 240,
+      margin: 4,
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF',
+      },
+    })
+      .then((url) => {
+        if (active) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (active) setQrDataUrl('');
+      });
+    return () => {
+      active = false;
+    };
+  }, [qrUrl]);
 
   const handleCopyCode = () => {
     if (navigator.clipboard) {
@@ -386,33 +409,47 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             </h3>
 
             <div
-              className="p-3 bg-white border-2 border-slate-900 rounded-2xl inline-flex items-center justify-center mx-auto shadow-sm"
+              className="p-2 bg-white border border-slate-200 rounded-2xl inline-flex items-center justify-center mx-auto shadow-sm"
               aria-label={`Código QR institucional verificable para ${user.name} (${user.code.toUpperCase()})`}
             >
-              <QRCodeSVG
-                value={qrUrl}
-                size={192}
-                level="L"
-                marginSize={2}
-                bgColor="#FFFFFF"
-                fgColor="#000000"
-              />
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt={`Código QR hacia ${qrUrl}`}
+                  width={220}
+                  height={220}
+                  className="w-[220px] h-[220px] rounded-xl block"
+                />
+              ) : (
+                <div className="w-[220px] h-[220px] flex items-center justify-center text-xs text-slate-500">
+                  Generando QR...
+                </div>
+              )}
             </div>
 
             <p className="text-[11px] text-slate-500 font-mono">
               ID: {user.code.toUpperCase()} • Válido para ingreso a campus
             </p>
 
-            <div>
+            <div className="flex items-center justify-center gap-4">
               <a
                 href={qrUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-utp-red hover:text-utp-redDark underline underline-offset-2 py-1"
               >
-                <span>Abrir enlace del carné</span>
+                <span>Abrir enlace</span>
                 <ArrowSquareOut size={14} weight="bold" />
               </a>
+              {qrDataUrl && (
+                <a
+                  href={qrDataUrl}
+                  download={`QR-UTP-${user.code.toUpperCase()}.png`}
+                  className="inline-flex items-center justify-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 underline underline-offset-2 py-1"
+                >
+                  <span>Descargar PNG</span>
+                </a>
+              )}
             </div>
 
             <button

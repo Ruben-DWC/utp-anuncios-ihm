@@ -51,7 +51,8 @@ export const App: React.FC = () => {
 
   const hasCarnetParam =
     typeof window !== 'undefined' &&
-    Boolean(new URLSearchParams(window.location.search).get('carnet')?.trim());
+    (Boolean(new URLSearchParams(window.location.search).get('carnet')?.trim()) ||
+      /^\/carnet\/[a-zA-Z0-9]+/i.test(window.location.pathname));
 
   // Estados de navegación e interfaces secundarias
   const [activeTab, setActiveTab] = useState<TabId>(() =>

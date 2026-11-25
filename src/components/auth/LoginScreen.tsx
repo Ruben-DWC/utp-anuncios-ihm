@@ -25,9 +25,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const carnetParam = useMemo(() => {
     if (typeof window === 'undefined') return null;
-    const raw = new URLSearchParams(window.location.search).get('carnet');
-    const trimmed = raw?.trim();
-    return trimmed && /^u/i.test(trimmed) ? trimmed.toUpperCase() : null;
+    const fromQuery = new URLSearchParams(window.location.search).get('carnet')?.trim();
+    const pathMatch = window.location.pathname.match(/^\/carnet\/([a-zA-Z0-9]+)/i);
+    const raw = fromQuery || pathMatch?.[1];
+    return raw && /^u/i.test(raw) ? raw.toUpperCase() : null;
   }, []);
 
   const [code, setCode] = useState(() => (carnetParam ? carnetParam.toLowerCase() : 'u22224908'));

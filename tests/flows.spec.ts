@@ -71,9 +71,9 @@ test.describe('Flujos End-to-End de Usuario (Login, Perfil, Notificaciones, Tuto
     // Abrir modal QR y verificar enlace ?carnet=
     await page.locator('button:has-text("Ver QR")').click();
     await expect(page.locator('text=Código QR de Acceso Institucional')).toBeVisible();
-    await expect(page.locator('a:has-text("Abrir enlace del carné")')).toHaveAttribute(
+    await expect(page.locator('a:has-text("Abrir enlace")')).toHaveAttribute(
       'href',
-      'https://utp-anuncios.netlify.app/?carnet=U22251092'
+      'https://utp-anuncios.netlify.app/carnet/U22251092'
     );
     await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
 
