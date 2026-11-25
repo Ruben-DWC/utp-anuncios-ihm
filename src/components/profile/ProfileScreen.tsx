@@ -326,7 +326,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               aria-label={`Código QR institucional verificable para ${user.name} (${user.code.toUpperCase()})`}
             >
               <QRCodeSVG
-                value={`UTP-CARNET|${user.code.toUpperCase()}|${user.name}|${user.campus}|${user.career}`}
+                value={`https://utp-anuncios.netlify.app/?carnet=${user.code.toUpperCase()}`}
                 size={168}
                 level="M"
                 bgColor="#FFFFFF"

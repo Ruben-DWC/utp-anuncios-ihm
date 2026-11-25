@@ -45,22 +45,22 @@ export const AppShell: React.FC<AppShellProps> = ({
           </linearGradient>
         </defs>
         <rect width="1440" height="900" fill="url(#utp-poly-base)" />
-        {/* Facetas poligonales superiores en carmesí UTP y pizarra */}
-        <polygon points="0,0 420,0 240,260 0,180" fill="#B50E30" fillOpacity="0.08" />
-        <polygon points="420,0 780,0 520,210 240,260" fill="#CBD5E1" fillOpacity="0.35" />
-        <polygon points="780,0 1160,0 940,190 520,210" fill="#E2E8F0" fillOpacity="0.5" />
-        <polygon points="1160,0 1440,0 1440,280 940,190" fill="#B50E30" fillOpacity="0.06" />
+        {/* Facetas poligonales superiores en carmesí UTP intenso y pizarra */}
+        <polygon points="0,0 420,0 240,260 0,180" fill="#B50E30" fillOpacity="0.26" />
+        <polygon points="420,0 780,0 520,210 240,260" fill="#B50E30" fillOpacity="0.11" />
+        <polygon points="780,0 1160,0 940,190 520,210" fill="#CBD5E1" fillOpacity="0.42" />
+        <polygon points="1160,0 1440,0 1440,280 940,190" fill="#B50E30" fillOpacity="0.22" />
         {/* Malla poligonal intermedia */}
-        <polygon points="0,180 240,260 160,540 0,480" fill="#CBD5E1" fillOpacity="0.28" />
+        <polygon points="0,180 240,260 160,540 0,480" fill="#B50E30" fillOpacity="0.14" />
         <polygon points="240,260 520,210 460,520 160,540" fill="#FFFFFF" fillOpacity="0.45" />
-        <polygon points="940,190 1440,280 1220,560 880,460" fill="#CBD5E1" fillOpacity="0.25" />
+        <polygon points="940,190 1440,280 1220,560 880,460" fill="#CBD5E1" fillOpacity="0.30" />
         {/* Facetas inferiores */}
-        <polygon points="0,480 160,540 340,900 0,900" fill="#B50E30" fillOpacity="0.05" />
-        <polygon points="160,540 460,520 680,900 340,900" fill="#E2E8F0" fillOpacity="0.4" />
-        <polygon points="880,460 1220,560 1040,900 680,900" fill="#FFFFFF" fillOpacity="0.35" />
-        <polygon points="1220,560 1440,280 1440,900 1040,900" fill="#B50E30" fillOpacity="0.09" />
-        {/* Trazos vectoriales finos */}
-        <g stroke="#94A3B8" strokeOpacity="0.18" strokeWidth="1" fill="none">
+        <polygon points="0,480 160,540 340,900 0,900" fill="#B50E30" fillOpacity="0.19" />
+        <polygon points="160,540 460,520 680,900 340,900" fill="#E2E8F0" fillOpacity="0.45" />
+        <polygon points="880,460 1220,560 1040,900 680,900" fill="#B50E30" fillOpacity="0.12" />
+        <polygon points="1220,560 1440,280 1440,900 1040,900" fill="#B50E30" fillOpacity="0.28" />
+        {/* Trazos vectoriales en carmesí UTP y pizarra */}
+        <g stroke="#B50E30" strokeOpacity="0.22" strokeWidth="1.25" fill="none">
           <polyline points="0,180 240,260 520,210 940,190 1440,280" />
           <polyline points="240,260 160,540 460,520 880,460 1220,560" />
           <line x1="420" y1="0" x2="240" y2="260" />

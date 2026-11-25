@@ -225,11 +225,7 @@ REGLAS OBLIGATORIAS:
    - "toolsUsed": lista corta de herramientas lógicas aplicadas (ej. ["buscar_avisos"]).
    - "action": { "type": "filter" | "highlight" | "save" | "info", "payload": id de aviso, categoría válida ("todos","academico","matricula","becas","eventos","pagos"), o null }.`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
-    const controller = new AbortController();
-    // Timeout de 3500ms en servidor para responder dentro del presupuesto de 4000ms del cliente
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-3.8-flash'];
     const contents = [
       ...history.map((turn) => ({
         role: turn.role,
@@ -245,41 +241,55 @@ REGLAS OBLIGATORIAS:
       },
     ];
 
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents,
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.1,
-          maxOutputTokens: 400,
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              text: { type: 'STRING' },
-              emotion: { type: 'STRING', enum: ['neutral', 'feliz', 'celebrando', 'disculpa'] },
-              toolsUsed: { type: 'ARRAY', items: { type: 'STRING' } },
-              action: {
-                type: 'OBJECT',
-                properties: {
-                  type: { type: 'STRING', enum: ['filter', 'highlight', 'save', 'info'] },
-                  payload: { type: 'STRING' },
-                },
-                required: ['type', 'payload'],
+    const requestBody = JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1,
+        maxOutputTokens: 400,
+        thinkingConfig: { thinkingBudget: 0 },
+        responseSchema: {
+          type: 'OBJECT',
+          properties: {
+            text: { type: 'STRING' },
+            emotion: { type: 'STRING', enum: ['neutral', 'feliz', 'celebrando', 'disculpa'] },
+            toolsUsed: { type: 'ARRAY', items: { type: 'STRING' } },
+            action: {
+              type: 'OBJECT',
+              properties: {
+                type: { type: 'STRING', enum: ['filter', 'highlight', 'save', 'info'] },
+                payload: { type: 'STRING' },
               },
+              required: ['type', 'payload'],
             },
-            required: ['text', 'action'],
           },
+          required: ['text', 'action'],
         },
-      }),
+      },
     });
 
-    clearTimeout(timeoutId);
+    let geminiRes: Response | null = null;
+    for (const modelName of modelsToTry) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3200);
+      try {
+        const res = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: requestBody,
+        });
+        clearTimeout(timeoutId);
+        geminiRes = res;
+        if (res.ok) break;
+      } catch {
+        clearTimeout(timeoutId);
+      }
+    }
 
-    if (!geminiRes.ok) {
+    if (!geminiRes || !geminiRes.ok) {
       const fallbackData = generateLocalResponse(query, active_notices);
       return {
         statusCode: 200,
