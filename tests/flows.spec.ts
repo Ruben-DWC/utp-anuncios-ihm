@@ -73,7 +73,7 @@ test.describe('Flujos End-to-End de Usuario (Login, Perfil, Notificaciones, Tuto
     await expect(page.locator('text=Código QR de Acceso Institucional')).toBeVisible();
     await expect(page.locator('a:has-text("Abrir enlace")')).toHaveAttribute(
       'href',
-      'https://utp-anuncios.netlify.app/carnet/U22251092'
+      'https://utp-anuncios-ihm.firebaseapp.com/carnet/U22251092'
     );
     await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
 

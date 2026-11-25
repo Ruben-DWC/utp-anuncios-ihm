@@ -52,7 +52,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [profileSavedBanner, setProfileSavedBanner] = useState(false);
 
   const user = currentUser || OFFICIAL_PROFILES[0]!;
-  const qrUrl = `https://utp-anuncios.netlify.app/carnet/${user.code.toUpperCase()}`;
+  const qrUrl = `https://utp-anuncios-ihm.firebaseapp.com/carnet/${user.code.toUpperCase()}`;
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   useEffect(() => {

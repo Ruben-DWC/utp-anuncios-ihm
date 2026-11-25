@@ -1,5 +1,25 @@
 {
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": "hosting-redirect",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/carnet/:code",
+        "destination": "https://utp-anuncios.netlify.app/carnet/:code",
+        "type": 302
+      },
+      {
+        "source": "/**",
+        "destination": "https://utp-anuncios.netlify.app/",
+        "type": 302
+      }
+    ]
   }
 }

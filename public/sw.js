@@ -1,4 +1,4 @@
-const CACHE_NAME = 'utp-anuncios-v3';
+const CACHE_NAME = 'utp-anuncios-v4';
 const APP_SHELL_ASSETS = [
   '/',
   '/index.html',
